@@ -1,7 +1,7 @@
 #include "Actuators.hpp"
 #include <gazebo/physics/physics.hh>
 
-using namespace gazebo_thruster;
+using namespace gazebo_usv;
 using namespace std;
 using namespace ignition::math;
 

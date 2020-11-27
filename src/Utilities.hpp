@@ -4,7 +4,7 @@
 #include <sdf/sdf.hh>
 #include <gazebo/common/Console.hh>
 
-namespace gazebo_thruster {
+namespace gazebo_usv {
     namespace utilities {
         /** Looks for a <plugin> element
          *

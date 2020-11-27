@@ -1,4 +1,4 @@
-#include <gazebo_thruster/Rudder.hpp>
+#include <gazebo_usv/Rudder.hpp>
 #include "Utilities.hpp"
 #include "Actuators.hpp"
 
@@ -15,6 +15,10 @@ Rudder::Rudder(Actuators& actuators, physics::ModelPtr model, sdf::ElementPtr sd
     }
 
     mActuatorID = actuators.addLink(mLink);
+
+    mArea = sdf->Get<float>("area", 1).first;
+    mLiftK = sdf->Get<float>("lift_factor", 1.5).first;
+    mDragK = sdf->Get<float>("drag_factor", 1).first;
 }
 
 void Rudder::update(Actuators& actuators) {

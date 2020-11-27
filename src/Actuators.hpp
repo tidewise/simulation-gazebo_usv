@@ -6,7 +6,7 @@
 #include <gazebo/msgs/msgs.hh>
 #include <gazebo_underwater/DataTypes.hpp>
 
-namespace gazebo_thruster {
+namespace gazebo_usv {
     /**
      * Class that applies added mass corrections on forces before applying them
      * to the underlying model
