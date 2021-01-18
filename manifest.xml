@@ -1,11 +1,12 @@
 <package>
-  <description brief="Gazebo model plugin to simulate underwater thrusters">
-  
+  <description brief="Gazebo model plugin to simulate USVs">
+    Based on the simulation/gazebo_thruster plugin, it adds support for rudders
+    while keeping the additional mass support. It also fixes some issues related
+    to the general behavior at the surface. It is not meant to be used for
+    underwater systems.
   </description>
-  <author>Thomio Watanabe/thomio.watanabe@fieb.org.br</author>
-  <license></license>
-  <url>http://</url>
-  <logo>http://</logo>
+  <author>sylvain.joyeux@tidewise.io</author>
+  <license>LGPLv2+</license>
   <depend package="base/cmake" />
   <depend package="simulation/gazebo" />
   <depend package="simulation/gazebo_underwater" />
