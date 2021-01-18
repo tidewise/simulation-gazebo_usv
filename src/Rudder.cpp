@@ -4,13 +4,13 @@
 
 using namespace std;
 using namespace gazebo;
-using namespace gazebo_thruster;
+using namespace gazebo_usv;
 using namespace ignition::math;
 
 Rudder::Rudder(Actuators& actuators, physics::ModelPtr model, sdf::ElementPtr sdf) {
     mLinkName = sdf->Get<string>("name");
     mLink = model->GetLink(mLinkName);
-    if (mLink) {
+    if (!mLink) {
         gzthrow("Rudder: link " + mLinkName + " does not exist");
     }
 
@@ -18,7 +18,10 @@ Rudder::Rudder(Actuators& actuators, physics::ModelPtr model, sdf::ElementPtr sd
 
     mArea = sdf->Get<float>("area", 1).first;
     mLiftK = sdf->Get<float>("lift_factor", 1.5).first;
-    mDragK = sdf->Get<float>("drag_factor", 1).first;
+    mDragK = sdf->Get<float>("drag_factor", 1e-3).first;
+}
+
+Rudder::~Rudder() {
 }
 
 void Rudder::update(Actuators& actuators) {
@@ -47,9 +50,6 @@ void Rudder::update(Actuators& actuators) {
     // get direction of lift
     auto liftDirection = ldNormal.Cross(velInLDPlane).Normalized();
 
-    // get direction of moment
-    auto momentDirection = ldNormal;
-
     float alpha = atan2(-upwardI.Dot(velInLDPlane), forwardI.Dot(velInLDPlane));
 
     // compute dynamic pressure
@@ -67,5 +67,11 @@ void Rudder::update(Actuators& actuators) {
     // drag at cp
     auto drag = cd * q * mArea * dragDirection;
 
-    actuators.applyForce(mActuatorID, lift + drag);
+    Vector3d worldForce = lift + drag;
+    Vector3d linkForce = pose.Rot().RotateVectorReverse(worldForce);
+    std::cout << alpha << " " << upwardI << " " << forwardI
+              << " " << vel.Length() << " " << vel << " " << velInLDPlane
+              << " " << linkForce << " " << lift << " " << drag << std::endl;
+    std::cout << std::endl;
+    actuators.applyForce(mActuatorID, linkForce);
 }

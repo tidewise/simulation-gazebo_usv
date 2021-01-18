@@ -1,4 +1,4 @@
-package gazebo_usv.msgs;
+package gazebo_thruster.msgs;
 
 message Thruster
 {

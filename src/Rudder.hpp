@@ -7,7 +7,7 @@
 #include <gazebo/msgs/msgs.hh>
 #include <gazebo_underwater/DataTypes.hpp>
 
-namespace gazebo_thruster {
+namespace gazebo_usv {
     class Actuators;
     class Rudder {
     public:

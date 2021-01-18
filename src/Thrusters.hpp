@@ -9,12 +9,16 @@
 
 #include "msgs.pb.h"
 
-namespace gazebo_thruster {
+namespace gazebo_usv {
     class Actuators;
 
     /** Management of all the thrusters in a given model */
     class Thrusters {
     public:
+        Thrusters() = default;
+        Thrusters(Thrusters const&) = delete;
+        ~Thrusters();
+
         void load(
             Actuators& actuators, gazebo::transport::NodePtr node,
             gazebo::physics::ModelPtr model, sdf::ElementPtr pluginElement

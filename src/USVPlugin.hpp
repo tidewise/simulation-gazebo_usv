@@ -8,9 +8,10 @@
 #include "Rudder.hpp"
 #include "Thrusters.hpp"
 
-namespace gazebo_thruster {
+namespace gazebo_usv {
     class USVPlugin : public gazebo::ModelPlugin {
     public:
+        ~USVPlugin();
         virtual void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf);
 
     private:
@@ -18,9 +19,9 @@ namespace gazebo_thruster {
         gazebo::transport::NodePtr mNode;
         gazebo::physics::ModelPtr mModel;
 
-        Actuators mActuators;
+        Actuators* mActuators = nullptr;
         std::vector<Rudder> mRudders;
-        Thrusters mThrusters;
+        Thrusters* mThrusters = nullptr;
 
         void updateBegin(gazebo::common::UpdateInfo const& info);
 

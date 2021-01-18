@@ -1,7 +1,7 @@
 #include "Utilities.hpp"
 #include <gazebo/common/Exception.hh>
 
-using namespace gazebo_thruster;
+using namespace gazebo_usv;
 
 sdf::ElementPtr utilities::findPluginElement(
     sdf::ElementPtr enclosing, std::string const& fileName

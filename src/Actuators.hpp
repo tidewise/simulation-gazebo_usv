@@ -17,6 +17,7 @@ namespace gazebo_usv {
 
         struct AddedMassCompensation {
             gazebo::physics::LinkPtr link;
+            bool initializedCompensatedEffort = false;
             ignition::math::Vector3d lastModelRelativeDirection;
             ignition::math::Vector3d compensatedDirection;
             ignition::math::Vector3d compensatedPosition;
@@ -33,12 +34,14 @@ namespace gazebo_usv {
         );
         gazebo_underwater::Matrix6 mCurrentMassMatrix;
         ignition::math::Vector3d mCurrentCOG;
+        bool mHasCOGAndMassInfo = false;
 
         std::vector<AddedMassCompensation> mAddedMassCompensation;
 
     public:
-        Actuators();
         Actuators(gazebo::physics::ModelPtr model, gazebo::transport::NodePtr node);
+        Actuators(Actuators const&) = delete;
+        ~Actuators();
 
         size_t addLink(gazebo::physics::LinkPtr link);
         void applyForce(size_t id, ignition::math::Vector3d const& force);

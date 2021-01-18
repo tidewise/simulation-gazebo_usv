@@ -4,8 +4,14 @@
 
 using namespace std;
 using namespace gazebo;
-using namespace gazebo_thruster;
+using namespace gazebo_usv;
 using namespace ignition::math;
+
+Thrusters::~Thrusters() {
+    if (mCommandSubscriber) {
+        mCommandSubscriber->Unsubscribe();
+    }
+}
 
 void Thrusters::load(
     Actuators& actuators, transport::NodePtr node,
@@ -16,6 +22,9 @@ void Thrusters::load(
 
     // Initialize communication node and subscribe to gazebo topic
     string topicName = mModel->GetName() + "/thrusters";
+    if (mCommandSubscriber) {
+        mCommandSubscriber->Unsubscribe();
+    }
     mCommandSubscriber =
         node->Subscribe("~/" + topicName, &Thrusters::processThrusterCommand, this);
 

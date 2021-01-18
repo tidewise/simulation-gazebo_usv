@@ -1,9 +1,13 @@
-#include <gazebo_thruster/USVPlugin.hpp>
+#include <gazebo_usv/USVPlugin.hpp>
 #include "Utilities.hpp"
 
 using namespace std;
 using namespace gazebo;
-using namespace gazebo_thruster;
+using namespace gazebo_usv;
+
+USVPlugin::~USVPlugin() {
+    delete mActuators;
+}
 
 void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
@@ -11,27 +15,28 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     // Import all thrusters from a model file (sdf)
     sdf::ElementPtr modelSDF = mModel->GetSDF();
     sdf::ElementPtr pluginElement = utilities::getPluginElement(
-        modelSDF, "libgazebo_thruster.so"
+        modelSDF, "libgazebo_usv.so"
     );
 
     // Initialize communication node and subscribe to gazebo topic
     mNode = transport::NodePtr(new transport::Node());
     mNode->Init();
 
-    mActuators = Actuators(mModel, mNode);
+    mActuators = new Actuators(mModel, mNode);
+    mThrusters = new Thrusters;
 
     mWorldUpdateEvent = event::Events::ConnectWorldUpdateBegin(
         boost::bind(&USVPlugin::updateBegin, this, _1)
     );
 
-    loadRudders(pluginElement);
     loadThrusters(pluginElement);
+    loadRudders(pluginElement);
 }
 
 void USVPlugin::loadRudders(sdf::ElementPtr pluginElement) {
     sdf::ElementPtr el = pluginElement->GetElement("rudder");
     while (el) {
-        mRudders.push_back(Rudder(mActuators, mModel, el));
+        mRudders.push_back(Rudder(*mActuators, mModel, el));
         el = el->GetNextElement("rudder");
     }
 }
@@ -39,14 +44,14 @@ void USVPlugin::loadRudders(sdf::ElementPtr pluginElement) {
 void USVPlugin::loadThrusters(sdf::ElementPtr pluginElement) {
     sdf::ElementPtr el = pluginElement->GetElement("thruster");
     if (el) {
-        mThrusters.load(mActuators, mNode, mModel, pluginElement);
+        mThrusters->load(*mActuators, mNode, mModel, pluginElement);
     }
 }
 
 void USVPlugin::updateBegin(common::UpdateInfo const& info) {
     for (auto& rudder : mRudders) {
-        rudder.update(mActuators);
+        rudder.update(*mActuators);
     }
 
-    mThrusters.update(mActuators);
+    mThrusters->update(*mActuators);
 }
