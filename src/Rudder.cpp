@@ -69,9 +69,5 @@ void Rudder::update(Actuators& actuators) {
 
     Vector3d worldForce = lift + drag;
     Vector3d linkForce = pose.Rot().RotateVectorReverse(worldForce);
-    std::cout << alpha << " " << upwardI << " " << forwardI
-              << " " << vel.Length() << " " << vel << " " << velInLDPlane
-              << " " << linkForce << " " << lift << " " << drag << std::endl;
-    std::cout << std::endl;
     actuators.applyForce(mActuatorID, linkForce);
 }
