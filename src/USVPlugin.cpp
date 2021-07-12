@@ -55,3 +55,5 @@ void USVPlugin::updateBegin(common::UpdateInfo const& info) {
 
     mThrusters->update(*mActuators);
 }
+
+GZ_REGISTER_MODEL_PLUGIN(USVPlugin);

@@ -28,8 +28,6 @@ namespace gazebo_usv {
         void loadRudders(sdf::ElementPtr pluginElement);
         void loadThrusters(sdf::ElementPtr pluginElement);
     };
-
-    GZ_REGISTER_MODEL_PLUGIN(USVPlugin);
 }
 
 #endif
