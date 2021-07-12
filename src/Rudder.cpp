@@ -1,17 +1,25 @@
+#include <gazebo_usv/Actuators.hpp>
 #include <gazebo_usv/Rudder.hpp>
-#include "Utilities.hpp"
-#include "Actuators.hpp"
+#include <gazebo_usv/Thruster.hpp>
+#include <gazebo_usv/USVPlugin.hpp>
+#include <gazebo_usv/Utilities.hpp>
 
 using namespace std;
 using namespace gazebo;
 using namespace gazebo_usv;
 using namespace ignition::math;
 
-Rudder::Rudder(Actuators& actuators, physics::ModelPtr model, sdf::ElementPtr sdf) {
+Rudder::Rudder(USVPlugin& plugin, Actuators& actuators, physics::ModelPtr model, sdf::ElementPtr sdf) {
     mLinkName = sdf->Get<string>("name");
     mLink = model->GetLink(mLinkName);
     if (!mLink) {
         gzthrow("Rudder: link " + mLinkName + " does not exist");
+    }
+
+    auto thrusterName = sdf->Get<string>("thrusterName");
+    if (!thrusterName.empty()) {
+        mAssociatedThruster = &plugin.getThrusterByName(thrusterName);
+        mThrustToSpeedK = sdf->Get<float>("thrustToFlowK", 0).first;
     }
 
     mActuatorID = actuators.addLink(mLink);
@@ -28,9 +36,24 @@ std::string Rudder::getLinkName() const {
     return mLinkName;
 }
 
+Vector3d Rudder::getFlowVelocity() const {
+    if (!mAssociatedThruster) {
+        return mLink->WorldLinearVel();
+    }
+
+    auto thrusterVelocity = mAssociatedThruster->getLink()->WorldLinearVel();
+    auto thrusterPose = mAssociatedThruster->getLink()->WorldPose();
+    auto thrusterX = thrusterPose.Rot().RotateVector(Vector3d::UnitX);
+    auto advanceSpeed = mAssociatedThruster->getAdvanceSpeed();
+
+    float velocityXSq = advanceSpeed * abs(advanceSpeed) +
+                        mThrustToSpeedK * mAssociatedThruster->getEffort();
+    return copysign(sqrt(abs(velocityXSq)), velocityXSq) * thrusterX;
+}
+
 void Rudder::update(Actuators& actuators) {
     // get linear velocity at cp in inertial frame
-    auto vel = mLink->WorldLinearVel(); // - waterCurrent;
+    auto vel = getFlowVelocity();
     if (vel.Length () <= 0.01) {
         return;
     }

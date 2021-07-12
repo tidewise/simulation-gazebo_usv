@@ -15,12 +15,11 @@ Thrusters::~Thrusters() {
 }
 
 void Thrusters::load(
-    USVPlugin& plugin,
     Actuators& actuators, transport::NodePtr node,
     physics::ModelPtr model, sdf::ElementPtr pluginElement
 ) {
     mModel = model;
-    mDefinitions = loadThrusters(plugin, actuators, pluginElement);
+    mDefinitions = loadThrusters(actuators, pluginElement);
 
     // Initialize communication node and subscribe to gazebo topic
     string topicName = mModel->GetName() + "/thrusters";
@@ -35,23 +34,27 @@ void Thrusters::load(
           << worldName << "/" << topicName << endl;
 }
 
-std::vector<Thrusters::Definition> Thrusters::loadThrusters(
-    USVPlugin& plugin, Actuators& actuators, sdf::ElementPtr pluginElement
+Thruster& Thrusters::getThrusterByName(std::string const& name) {
+    for (auto& thruster : mDefinitions) {
+        if (thruster.getLinkName() == name) {
+            return thruster;
+        }
+    }
+    gzthrow("no thruster with link " + name);
+}
+
+std::vector<Thruster> Thrusters::loadThrusters(
+    Actuators& actuators, sdf::ElementPtr pluginElement
 ) {
-    std::vector<Definition> definitions;
+    std::vector<Thruster> definitions;
     sdf::ElementPtr el = pluginElement->GetElement("thruster");
     while (el) {
         // Load thrusters attributes
-        Definition def;
+        Thruster def;
         def.name = el->Get<string>("name");
         auto link = mModel->GetLink(def.name);
         if (!link) {
             gzthrow("Thruster: thruster " + def.name + " does not exist");
-        }
-
-        auto rudderName = el->Get<string>("rudderName");
-        if (!rudderName.empty()) {
-            def.associatedRudder = &plugin.getRudderByName(rudderName);
         }
 
         gzmsg << "Thruster: thruster name: " << def.name << endl;
@@ -97,7 +100,7 @@ void Thrusters::processThrusterCommand(ThrustersMSG const& thrustersMSG) {
     }
 }
 
-void Thrusters::clampThrustEffort(Definition& thruster)
+void Thrusters::clampThrustEffort(Thruster& thruster)
 {
     if (thruster.effort < thruster.minThrust) {
         gzmsg << "Thruster: thruster effort " << thruster.effort
@@ -118,7 +121,7 @@ void Thrusters::clampThrustEffort(Definition& thruster)
 
 void Thrusters::update(Actuators& actuators) {
     for (auto& thruster : mDefinitions) {
-        actuators.applyForce(thruster.actuatorID,
-                             Vector3d::UnitX * thruster.effort);
+        auto thrust = Vector3d::UnitX * thruster.effort;
+        actuators.applyForce(thruster.actuatorID, thrust);
     }
 }
