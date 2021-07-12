@@ -1,6 +1,7 @@
 #include "Thrusters.hpp"
 #include "Utilities.hpp"
 #include "Actuators.hpp"
+#include "USVPlugin.hpp"
 
 using namespace std;
 using namespace gazebo;
@@ -33,14 +34,23 @@ void Thrusters::load(
           << worldName << "/" << topicName << endl;
 }
 
-std::vector<Thrusters::Definition> Thrusters::loadThrusters(
+Thruster& Thrusters::getThrusterByName(std::string const& name) {
+    for (auto& thruster : mDefinitions) {
+        if (thruster.getLinkName() == name) {
+            return thruster;
+        }
+    }
+    gzthrow("no thruster with link " + name);
+}
+
+std::vector<Thruster> Thrusters::loadThrusters(
     Actuators& actuators, sdf::ElementPtr pluginElement
 ) {
-    std::vector<Definition> definitions;
+    std::vector<Thruster> definitions;
     sdf::ElementPtr el = pluginElement->GetElement("thruster");
     while (el) {
         // Load thrusters attributes
-        Definition def;
+        Thruster def;
         def.name = el->Get<string>("name");
         auto link = mModel->GetLink(def.name);
         if (!link) {
@@ -90,7 +100,7 @@ void Thrusters::processThrusterCommand(ThrustersMSG const& thrustersMSG) {
     }
 }
 
-void Thrusters::clampThrustEffort(Definition& thruster)
+void Thrusters::clampThrustEffort(Thruster& thruster)
 {
     if (thruster.effort < thruster.minThrust) {
         gzmsg << "Thruster: thruster effort " << thruster.effort
@@ -111,7 +121,7 @@ void Thrusters::clampThrustEffort(Definition& thruster)
 
 void Thrusters::update(Actuators& actuators) {
     for (auto& thruster : mDefinitions) {
-        actuators.applyForce(thruster.actuatorID,
-                             Vector3d::UnitX * thruster.effort);
+        auto thrust = Vector3d::UnitX * thruster.effort;
+        actuators.applyForce(thruster.actuatorID, thrust);
     }
 }
