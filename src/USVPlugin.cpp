@@ -29,8 +29,20 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
         boost::bind(&USVPlugin::updateBegin, this, _1)
     );
 
-    loadThrusters(pluginElement);
     loadRudders(pluginElement);
+    loadThrusters(pluginElement);
+}
+
+Rudder& USVPlugin::getRudderByName(std::string const& name) {
+    auto rudder_it = find_if(
+        mRudders.begin(), mRudders.end(),
+        [name](Rudder& r) { return r.getLinkName() == name; }
+    );
+    if (rudder_it == mRudders.end()) {
+        throw std::invalid_argument("no rudder named " + name);
+    }
+    return *rudder_it;
+
 }
 
 void USVPlugin::loadRudders(sdf::ElementPtr pluginElement) {
@@ -44,7 +56,7 @@ void USVPlugin::loadRudders(sdf::ElementPtr pluginElement) {
 void USVPlugin::loadThrusters(sdf::ElementPtr pluginElement) {
     sdf::ElementPtr el = pluginElement->GetElement("thruster");
     if (el) {
-        mThrusters->load(*mActuators, mNode, mModel, pluginElement);
+        mThrusters->load(*this, *mActuators, mNode, mModel, pluginElement);
     }
 }
 

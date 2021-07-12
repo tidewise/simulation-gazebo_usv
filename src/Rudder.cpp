@@ -24,6 +24,10 @@ Rudder::Rudder(Actuators& actuators, physics::ModelPtr model, sdf::ElementPtr sd
 Rudder::~Rudder() {
 }
 
+std::string Rudder::getLinkName() const {
+    return mLinkName;
+}
+
 void Rudder::update(Actuators& actuators) {
     // get linear velocity at cp in inertial frame
     auto vel = mLink->WorldLinearVel(); // - waterCurrent;

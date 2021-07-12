@@ -1,6 +1,7 @@
 #include "Thrusters.hpp"
 #include "Utilities.hpp"
 #include "Actuators.hpp"
+#include "USVPlugin.hpp"
 
 using namespace std;
 using namespace gazebo;
@@ -14,11 +15,12 @@ Thrusters::~Thrusters() {
 }
 
 void Thrusters::load(
+    USVPlugin& plugin,
     Actuators& actuators, transport::NodePtr node,
     physics::ModelPtr model, sdf::ElementPtr pluginElement
 ) {
     mModel = model;
-    mDefinitions = loadThrusters(actuators, pluginElement);
+    mDefinitions = loadThrusters(plugin, actuators, pluginElement);
 
     // Initialize communication node and subscribe to gazebo topic
     string topicName = mModel->GetName() + "/thrusters";
@@ -34,7 +36,7 @@ void Thrusters::load(
 }
 
 std::vector<Thrusters::Definition> Thrusters::loadThrusters(
-    Actuators& actuators, sdf::ElementPtr pluginElement
+    USVPlugin& plugin, Actuators& actuators, sdf::ElementPtr pluginElement
 ) {
     std::vector<Definition> definitions;
     sdf::ElementPtr el = pluginElement->GetElement("thruster");
@@ -45,6 +47,11 @@ std::vector<Thrusters::Definition> Thrusters::loadThrusters(
         auto link = mModel->GetLink(def.name);
         if (!link) {
             gzthrow("Thruster: thruster " + def.name + " does not exist");
+        }
+
+        auto rudderName = el->Get<string>("rudderName");
+        if (!rudderName.empty()) {
+            def.associatedRudder = &plugin.getRudderByName(rudderName);
         }
 
         gzmsg << "Thruster: thruster name: " << def.name << endl;

@@ -11,6 +11,8 @@
 
 namespace gazebo_usv {
     class Actuators;
+    class USVPlugin;
+    class Rudder;
 
     /** Management of all the thrusters in a given model */
     class Thrusters {
@@ -20,6 +22,7 @@ namespace gazebo_usv {
         ~Thrusters();
 
         void load(
+            USVPlugin& plugin,
             Actuators& actuators, gazebo::transport::NodePtr node,
             gazebo::physics::ModelPtr model, sdf::ElementPtr pluginElement
         );
@@ -38,6 +41,8 @@ namespace gazebo_usv {
             double minThrust;
             double maxThrust;
             double effort;
+
+            Rudder* associatedRudder = nullptr;
         };
 
         std::vector<Definition> mDefinitions;
@@ -46,7 +51,7 @@ namespace gazebo_usv {
         gazebo::transport::SubscriberPtr mCommandSubscriber;
 
         std::vector<Definition> loadThrusters(
-            Actuators& actuators, sdf::ElementPtr pluginElement
+            USVPlugin& plugin, Actuators& actuators, sdf::ElementPtr pluginElement
         );
 
         /** Apply the min/max thrust to thruster effort

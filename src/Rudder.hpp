@@ -16,6 +16,7 @@ namespace gazebo_usv {
         ~Rudder();
 
         void update(Actuators& actuator);
+        std::string getLinkName() const;
 
     private:
         std::string mLinkName;

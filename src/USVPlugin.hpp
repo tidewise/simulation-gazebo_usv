@@ -13,6 +13,7 @@ namespace gazebo_usv {
     public:
         ~USVPlugin();
         virtual void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf);
+        Rudder& getRudderByName(std::string const& name);
 
     private:
         gazebo::event::ConnectionPtr mWorldUpdateEvent;
