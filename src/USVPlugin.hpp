@@ -4,15 +4,19 @@
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/transport/transport.hh>
-#include "Actuators.hpp"
-#include "Rudder.hpp"
-#include "Thrusters.hpp"
+
+#include <gazebo_usv/Actuators.hpp>
+#include <gazebo_usv/Rudder.hpp>
+#include <gazebo_usv/Thrusters.hpp>
+#include <gazebo_usv/Thruster.hpp>
 
 namespace gazebo_usv {
     class USVPlugin : public gazebo::ModelPlugin {
     public:
         ~USVPlugin();
         virtual void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf);
+        Rudder& getRudderByName(std::string const& name);
+        Thruster& getThrusterByName(std::string const& name);
 
     private:
         gazebo::event::ConnectionPtr mWorldUpdateEvent;
@@ -28,8 +32,6 @@ namespace gazebo_usv {
         void loadRudders(sdf::ElementPtr pluginElement);
         void loadThrusters(sdf::ElementPtr pluginElement);
     };
-
-    GZ_REGISTER_MODEL_PLUGIN(USVPlugin);
 }
 
 #endif

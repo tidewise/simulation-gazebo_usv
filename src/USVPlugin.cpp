@@ -33,10 +33,23 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     loadRudders(pluginElement);
 }
 
+Rudder& USVPlugin::getRudderByName(std::string const& name) {
+    for (auto& rudder : mRudders) {
+        if (rudder.getLinkName() == name) {
+            return rudder;
+        }
+    }
+    gzthrow("no rudder named " + name);
+}
+
+Thruster& USVPlugin::getThrusterByName(std::string const& name) {
+    return mThrusters->getThrusterByName(name);
+}
+
 void USVPlugin::loadRudders(sdf::ElementPtr pluginElement) {
     sdf::ElementPtr el = pluginElement->GetElement("rudder");
     while (el) {
-        mRudders.push_back(Rudder(*mActuators, mModel, el));
+        mRudders.push_back(Rudder(*this, *mActuators, mModel, el));
         el = el->GetNextElement("rudder");
     }
 }
@@ -55,3 +68,5 @@ void USVPlugin::updateBegin(common::UpdateInfo const& info) {
 
     mThrusters->update(*mActuators);
 }
+
+GZ_REGISTER_MODEL_PLUGIN(USVPlugin);
