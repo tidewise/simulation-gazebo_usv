@@ -31,6 +31,7 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
     loadThrusters(pluginElement);
     loadRudders(pluginElement);
+    loadWindParameters(pluginElement);
 }
 
 Rudder& USVPlugin::getRudderByName(std::string const& name) {
@@ -61,12 +62,21 @@ void USVPlugin::loadThrusters(sdf::ElementPtr pluginElement) {
     }
 }
 
+void USVPlugin::loadWindParameters(sdf::ElementPtr pluginElement){
+   sdf::ElementPtr el = pluginElement->GetElement("wind");
+   if (el) {
+       mWind.load(mModel, mNode, pluginElement);
+   }
+}
+
 void USVPlugin::updateBegin(common::UpdateInfo const& info) {
     for (auto& rudder : mRudders) {
         rudder.update(*mActuators);
     }
 
     mThrusters->update(*mActuators);
+    mWind.update();
+
 }
 
 GZ_REGISTER_MODEL_PLUGIN(USVPlugin);
