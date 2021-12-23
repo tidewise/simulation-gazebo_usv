@@ -14,9 +14,11 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     mModel = _model;
     // Import all thrusters from a model file (sdf)
     sdf::ElementPtr modelSDF = mModel->GetSDF();
-    sdf::ElementPtr pluginElement = utilities::getPluginElement(
-        modelSDF, "libgazebo_usv.so"
+    sdf::ElementPtr thrustersPluginElement = utilities::getPluginElementByName(
+        modelSDF, "thrusters"
     );
+    // Since the wind plugin is optional and uses the same filename as the thrusters plugin, it should be found by name and be ignored if not found 
+    sdf::ElementPtr windPluginElement = utilities::findPluginElementByName(modelSDF, "wind_dynamics");
 
     // Initialize communication node and subscribe to gazebo topic
     mNode = transport::NodePtr(new transport::Node());
@@ -29,9 +31,10 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
         boost::bind(&USVPlugin::updateBegin, this, _1)
     );
 
-    loadThrusters(pluginElement);
-    loadRudders(pluginElement);
-    loadWindParameters(pluginElement);
+    loadThrusters(thrustersPluginElement);
+    loadRudders(thrustersPluginElement);
+    if (windPluginElement)
+        loadWindParameters(windPluginElement);
 }
 
 Rudder& USVPlugin::getRudderByName(std::string const& name) {
@@ -63,10 +66,7 @@ void USVPlugin::loadThrusters(sdf::ElementPtr pluginElement) {
 }
 
 void USVPlugin::loadWindParameters(sdf::ElementPtr pluginElement){
-   sdf::ElementPtr el = pluginElement->GetElement("wind");
-   if (el) {
        mWind.load(mModel, mNode, pluginElement);
-   }
 }
 
 void USVPlugin::updateBegin(common::UpdateInfo const& info) {
@@ -76,7 +76,6 @@ void USVPlugin::updateBegin(common::UpdateInfo const& info) {
 
     mThrusters->update(*mActuators);
     mWind.update();
-
 }
 
 GZ_REGISTER_MODEL_PLUGIN(USVPlugin);
