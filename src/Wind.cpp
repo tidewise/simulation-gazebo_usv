@@ -6,6 +6,8 @@ using namespace gazebo;
 using namespace gazebo_usv;
 using namespace ignition::math;
 
+Wind::Wind(Wind::EffectParameters const parameters) : mParameters(parameters) {}
+
 Wind::~Wind()
 {
     if (mWindVelocitySubscriber)
@@ -60,7 +62,7 @@ physics::LinkPtr Wind::getReferenceLink(physics::ModelPtr const _model, sdf::Ele
 
 Wind::EffectParameters Wind::loadParameters(sdf::ElementPtr el) const
 {
-    gzmsg << "Loading wind effect parameters" << endl;
+    gzmsg << "Wind: Loading wind effect parameters" << endl;
 
     EffectParameters parameters;
     parameters.frontal_area = utilities::getParameter<double>("Wind", el, "frontal_area", "m2", 0);
@@ -77,39 +79,36 @@ void Wind::readWindVelocity(const ConstVector3dPtr &velocity)
     mWindVelocity = Vector3d(velocity->x(), velocity->y(), velocity->z());
 }
 
-Wind::Effects Wind::computeEffects()
+Wind::Effects Wind::computeEffects(Quaterniond const body2world_orientation, Vector3d const vessel_linear_vel_world, Vector3d const wind_velocity_world) const
 {
-    // Compute relative velocities and angle of attack
-    Angle model_yaw = mModel->WorldPose().Rot().Euler().Z();
-    Angle wind_direction(atan2(-mWindVelocity.Y(), mWindVelocity.X()));
-    Angle wind_angle_from_bf(wind_direction - model_yaw);                                                                                               // Wind angle from body frame
-    Vector3d wind_velocity_bf(mWindVelocity.Length() * cos(wind_angle_from_bf.Radian()), mWindVelocity.Length() * sin(wind_angle_from_bf.Radian()), 0); // Wind velocity in the body frame
-    Vector3d relative_velocity = mModel->WorldLinearVel() - wind_velocity_bf;
-    if (!relative_velocity.X() && !relative_velocity.Y())
+    Quaterniond world2body_orientation = body2world_orientation.Inverse();
+    Vector3d relative_wind_velocity_world = vessel_linear_vel_world - wind_velocity_world;
+    Vector3d relative_wind_velocity_body = world2body_orientation * relative_wind_velocity_world;
+    relative_wind_velocity_body.Z() = 0;
+    if (relative_wind_velocity_body.Length() < 1e-3)
         return Effects{};
-    // Angle of attack in rad
-    double angle_of_attack_rad = -atan2(relative_velocity.Y(), relative_velocity.X());
-    Angle angle_of_attack(-angle_of_attack_rad);
-    double relative_velocity_squared = pow(relative_velocity.Length(), 2);
 
-    // Compute wind coefficients
+    // Compute the wind's angle of attack and its coefficients
+    double angle_of_attack_rad = -atan2(relative_wind_velocity_body.Y(), relative_wind_velocity_body.X());
+    Angle angle_of_attack(angle_of_attack_rad);
     double wind_coeff_x = -mParameters.coefficients.X() * cos(angle_of_attack.Radian());
     double wind_coeff_y = mParameters.coefficients.Y() * sin(angle_of_attack.Radian());
     double wind_coeff_n = mParameters.coefficients.Z() * sin(2 * angle_of_attack.Radian());
 
     // Compute wind effects for X, Y and N
     Effects wind_effects;
-    wind_effects.force[0] = 0.5 * mParameters.air_density * relative_velocity_squared * wind_coeff_x * mParameters.frontal_area;
-    wind_effects.force[1] = 0.5 * mParameters.air_density * relative_velocity_squared * wind_coeff_y * mParameters.lateral_area;
-    wind_effects.torque[2] = 0.5 * mParameters.air_density * relative_velocity_squared * wind_coeff_n * mParameters.lateral_area * mParameters.length_overall;
+    wind_effects.force[0] = 0.5 * mParameters.air_density * relative_wind_velocity_body.SquaredLength() * wind_coeff_x * mParameters.frontal_area;
+    wind_effects.force[1] = 0.5 * mParameters.air_density * relative_wind_velocity_body.SquaredLength() * wind_coeff_y * mParameters.lateral_area;
+    wind_effects.torque[2] = 0.5 * mParameters.air_density * relative_wind_velocity_body.SquaredLength() * wind_coeff_n * mParameters.lateral_area * mParameters.length_overall;
     return wind_effects;
 }
 
 void Wind::update()
 {
+    // Compute the new force and torque for this timestep 
+    Effects effects = computeEffects(mModel->WorldPose().Rot(), mModel->WorldLinearVel(), mWindVelocity);
 
-    // Compute the new force and torque for this timestep
-    Effects effects = computeEffects();
+    // Apply force and torque
     mLink->AddRelativeForce(effects.force);
     mLink->AddRelativeTorque(effects.torque);
 }

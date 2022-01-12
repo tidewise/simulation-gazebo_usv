@@ -15,16 +15,8 @@ namespace gazebo_usv
         typedef gazebo::transport::NodePtr NodePtr;
         typedef gazebo::transport::SubscriberPtr SubscriberPtr;
 
-
     public:
-        Wind() = default;
-        ~Wind();
-
-        void load(ModelPtr const _model, NodePtr const _node, sdf::ElementPtr const _sdf);
-        void update();
-
-    private:
-        // Parameters used to calculate the wind effects read from the SDF
+        // Parameters used to calculate the wind effects 
         struct EffectParameters
         {
             double frontal_area;
@@ -33,13 +25,54 @@ namespace gazebo_usv
             double air_density;
             ignition::math::Vector3d coefficients;
         };
-        // Wind force and torque 
+        // Wind force and torque
         struct Effects
         {
             ignition::math::Vector3d force;
             ignition::math::Vector3d torque;
         };
 
+        Wind() = default;
+        /**
+         * @brief Construct a new Wind object.
+         * 
+         * PS: This constructor is used mainly for easier testing.
+         * 
+         * @param parameters 
+         */
+        Wind(EffectParameters const parameters);
+        ~Wind();
+
+        /**
+         * @brief Loads the model properties from the SDF file and the gazebo communication node.
+         * 
+         * @param _model model pointer
+         * @param _node gazebo node
+         * @param _sdf sdf element
+         */
+        void load(ModelPtr const _model, NodePtr const _node, sdf::ElementPtr const _sdf);
+
+        /**
+         * @brief Update the wind effects on the model.
+         * 
+         */
+        void update();
+
+        /**
+         * @brief Computes the wind effects on a vessel. 
+         * 
+         * Reference: 
+         *  - Fossen's Handbook of Marine Craft Hydrodynamics and Motion Control: pages 188 to 192.
+         * 
+         * PS: This method is public for testing purposes and shouldn't be used for other reasons.
+         * @param body2world_orientation vessel orientation in world frame 
+         * @param vessel_linear_vel_world vessel linear velocity in world frame 
+         * @param wind_velocity_world wind velocity in world frame 
+         * @return Effects resulting force and torque to be applied at the vessel CoG. 
+         */
+        Effects computeEffects(ignition::math::Quaterniond const body2world_orientation, ignition::math::Vector3d const vessel_linear_vel_world, ignition::math::Vector3d const wind_velocity_world) const;
+
+    private:
         ModelPtr mModel;
         NodePtr mNode;
         LinkPtr mLink;
@@ -47,16 +80,29 @@ namespace gazebo_usv
         SubscriberPtr mWindVelocitySubscriber;
 
         EffectParameters mParameters;
-        ignition::math::Vector3d mWindVelocity;
+        ignition::math::Vector3d mWindVelocity{};
 
-        // Compute wind effects
-        Effects computeEffects();
-
-        // Get link where the wind effects will be applied
+        /**
+         * @brief Get the reference link where force and torque will be applied
+         * 
+         * @param model model pointer
+         * @param sdf sdf element
+         * @return LinkPtr reference link.
+         */
         LinkPtr getReferenceLink(ModelPtr const model, sdf::ElementPtr const sdf) const;
+
+        /**
+         * @brief Load parameters from SDF file
+         * 
+         * @param el SDF element
+         * @return EffectParameters loaded parameters
+         */
         EffectParameters loadParameters(sdf::ElementPtr const el) const;
 
-        // Read from the wind velocity topic
+        /**
+         * @brief Subscriber callback for the wind velocity topic
+         * 
+         */
         void readWindVelocity(const ConstVector3dPtr &);
     };
 }
