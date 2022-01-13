@@ -9,6 +9,7 @@
 #include <gazebo_usv/Rudder.hpp>
 #include <gazebo_usv/Thrusters.hpp>
 #include <gazebo_usv/Thruster.hpp>
+#include <gazebo_usv/Wind.hpp>
 
 namespace gazebo_usv {
     class USVPlugin : public gazebo::ModelPlugin {
@@ -26,11 +27,13 @@ namespace gazebo_usv {
         Actuators* mActuators = nullptr;
         std::vector<Rudder> mRudders;
         Thrusters* mThrusters = nullptr;
+        Wind mWind;
 
         void updateBegin(gazebo::common::UpdateInfo const& info);
 
         void loadRudders(sdf::ElementPtr pluginElement);
         void loadThrusters(sdf::ElementPtr pluginElement);
+        void loadWindParameters(sdf::ElementPtr pluginElement);
     };
 }
 

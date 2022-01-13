@@ -18,6 +18,18 @@ namespace gazebo_usv {
         sdf::ElementPtr findPluginElement(sdf::ElementPtr enclosing,
                                           std::string const& fileName);
 
+        /** Looks for a <plugin> element
+         *
+         * This methods searches for a plugin element, direct child of
+         * \c enclosing, whose name is the given name. It differs
+         * from \c getPluginElement by the way it handles the missing case.
+         *
+         * @return a null pointer if the plugin could not be found
+         * @see getPluginElement
+         */
+        sdf::ElementPtr findPluginElementByName(sdf::ElementPtr enclosing,
+                                                std::string const& pluginName);
+
         /** Resolves for a <plugin> element
          *
          * This methods searches for a plugin element, direct child of
@@ -29,6 +41,18 @@ namespace gazebo_usv {
          */
         sdf::ElementPtr getPluginElement(sdf::ElementPtr enclosing,
                                          std::string const& fileName);
+
+        /** Resolves for a <plugin> element
+         *
+         * This methods searches for a plugin element, direct child of
+         * \c enclosing, whose name is the given name. It differs
+         * from \c findPluginElementByName by the way it handles the missing case.
+         *
+         * @throw invalid_argument if the plugin could not be found
+         * @see findPluginElement
+         */
+        sdf::ElementPtr getPluginElementByName(sdf::ElementPtr enclosing,
+                                         std::string const& pluginName);
 
 
         /** Get a typed parameter from the given element
