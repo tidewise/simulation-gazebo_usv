@@ -6,6 +6,8 @@ using namespace gazebo;
 using namespace gazebo_usv;
 
 USVPlugin::~USVPlugin() {
+    delete mWind;
+    delete mThrusters;
     delete mActuators;
 }
 
@@ -33,8 +35,11 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
     loadThrusters(thrustersPluginElement);
     loadRudders(thrustersPluginElement);
-    if (windPluginElement)
+
+    if (windPluginElement) {
+        mWind = new Wind;
         loadWindParameters(windPluginElement);
+    }
 }
 
 Rudder& USVPlugin::getRudderByName(std::string const& name) {
@@ -66,7 +71,7 @@ void USVPlugin::loadThrusters(sdf::ElementPtr pluginElement) {
 }
 
 void USVPlugin::loadWindParameters(sdf::ElementPtr pluginElement){
-       mWind.load(mModel, mNode, pluginElement);
+       mWind->load(mModel, mNode, pluginElement);
 }
 
 void USVPlugin::updateBegin(common::UpdateInfo const& info) {
@@ -75,7 +80,10 @@ void USVPlugin::updateBegin(common::UpdateInfo const& info) {
     }
 
     mThrusters->update(*mActuators);
-    mWind.update();
+
+    if (mWind) {
+        mWind->update();
+    }
 }
 
 GZ_REGISTER_MODEL_PLUGIN(USVPlugin);

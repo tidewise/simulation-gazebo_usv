@@ -27,7 +27,7 @@ namespace gazebo_usv {
         Actuators* mActuators = nullptr;
         std::vector<Rudder> mRudders;
         Thrusters* mThrusters = nullptr;
-        Wind mWind;
+        Wind* mWind = nullptr;
 
         void updateBegin(gazebo::common::UpdateInfo const& info);
 
