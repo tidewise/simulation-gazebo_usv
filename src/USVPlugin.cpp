@@ -56,6 +56,10 @@ Thruster& USVPlugin::getThrusterByName(std::string const& name) {
 }
 
 void USVPlugin::loadRudders(sdf::ElementPtr pluginElement) {
+    if (!pluginElement->HasElement("rudder")) {
+        return;
+    }
+
     sdf::ElementPtr el = pluginElement->GetElement("rudder");
     while (el) {
         mRudders.push_back(Rudder(*this, *mActuators, mModel, el));
