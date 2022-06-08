@@ -9,6 +9,7 @@ USVPlugin::~USVPlugin() {
     delete mWind;
     delete mThrusters;
     delete mActuators;
+    delete mDirectForce;
 }
 
 void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
@@ -19,8 +20,11 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     sdf::ElementPtr thrustersPluginElement = utilities::getPluginElementByName(
         modelSDF, "thrusters"
     );
-    // Since the wind plugin is optional and uses the same filename as the thrusters plugin, it should be found by name and be ignored if not found 
+
+    // Since the following plugins are optional and uses the same filename as the thrusters plugin,
+    // it should be found by name and be ignored if not found
     sdf::ElementPtr windPluginElement = utilities::findPluginElementByName(modelSDF, "wind_dynamics");
+    sdf::ElementPtr directForcePluginElement = utilities::findPluginElementByName(modelSDF, "direct_force");
 
     // Initialize communication node and subscribe to gazebo topic
     mNode = transport::NodePtr(new transport::Node());
@@ -35,6 +39,7 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     mThrusters = loadThrusters(thrustersPluginElement);
     mRudders = loadRudders(thrustersPluginElement);
     mWind = loadWindParameters(windPluginElement);
+    mDirectForce = loadDirectForceApplicationParameters(directForcePluginElement);
 }
 
 Rudder& USVPlugin::getRudderByName(std::string const& name) {
@@ -87,6 +92,20 @@ Wind* USVPlugin::loadWindParameters(sdf::ElementPtr windPluginElement){
     return wind;
 }
 
+DirectForceApplication* USVPlugin::loadDirectForceApplicationParameters(
+    sdf::ElementPtr directForcePluginElement)
+{
+    if (!directForcePluginElement) {
+        return nullptr;
+    }
+
+    DirectForceApplication* direct_force = new DirectForceApplication;
+    direct_force->load(*mActuators, mModel, mNode, directForcePluginElement);
+
+    return direct_force;
+}
+
+
 void USVPlugin::updateBegin(common::UpdateInfo const& info) {
     for (auto& rudder : mRudders) {
         rudder.update(*mActuators);
@@ -96,6 +115,10 @@ void USVPlugin::updateBegin(common::UpdateInfo const& info) {
 
     if (mWind) {
         mWind->update();
+    }
+
+    if (mDirectForce) {
+        mDirectForce->update(*mActuators);
     }
 }
 
