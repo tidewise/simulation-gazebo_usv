@@ -27,19 +27,14 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     mNode->Init();
 
     mActuators = new Actuators(mModel, mNode);
-    mThrusters = new Thrusters;
 
     mWorldUpdateEvent = event::Events::ConnectWorldUpdateBegin(
         boost::bind(&USVPlugin::updateBegin, this, _1)
     );
 
-    loadThrusters(thrustersPluginElement);
-    loadRudders(thrustersPluginElement);
-
-    if (windPluginElement) {
-        mWind = new Wind;
-        loadWindParameters(windPluginElement);
-    }
+    mThrusters = loadThrusters(thrustersPluginElement);
+    mRudders = loadRudders(thrustersPluginElement);
+    mWind = loadWindParameters(windPluginElement);
 }
 
 Rudder& USVPlugin::getRudderByName(std::string const& name) {
@@ -55,27 +50,41 @@ Thruster& USVPlugin::getThrusterByName(std::string const& name) {
     return mThrusters->getThrusterByName(name);
 }
 
-void USVPlugin::loadRudders(sdf::ElementPtr pluginElement) {
-    if (!pluginElement->HasElement("rudder")) {
-        return;
+std::vector<Rudder> USVPlugin::loadRudders(sdf::ElementPtr thrustersPluginElement) {
+    if (!thrustersPluginElement->HasElement("rudder")) {
+        return {};
     }
 
-    sdf::ElementPtr el = pluginElement->GetElement("rudder");
+    std::vector<Rudder> rudders;
+
+    sdf::ElementPtr el = thrustersPluginElement->GetElement("rudder");
     while (el) {
-        mRudders.push_back(Rudder(*this, *mActuators, mModel, el));
+        rudders.push_back(Rudder(*this, *mActuators, mModel, el));
         el = el->GetNextElement("rudder");
     }
+
+    return rudders;
 }
 
-void USVPlugin::loadThrusters(sdf::ElementPtr pluginElement) {
-    sdf::ElementPtr el = pluginElement->GetElement("thruster");
-    if (el) {
-        mThrusters->load(*mActuators, mNode, mModel, pluginElement);
+Thrusters* USVPlugin::loadThrusters(sdf::ElementPtr thrustersPluginElement) {
+    Thrusters* thrusters = new Thrusters;
+
+    if (sdf::ElementPtr el = thrustersPluginElement->GetElement("thruster")) {
+        thrusters->load(*mActuators, mNode, mModel, thrustersPluginElement);
     }
+
+    return thrusters;
 }
 
-void USVPlugin::loadWindParameters(sdf::ElementPtr pluginElement){
-       mWind->load(mModel, mNode, pluginElement);
+Wind* USVPlugin::loadWindParameters(sdf::ElementPtr windPluginElement){
+    if (!windPluginElement) {
+        return nullptr;
+    }
+
+    Wind* wind = new Wind;
+    wind->load(mModel, mNode, windPluginElement);
+
+    return wind;
 }
 
 void USVPlugin::updateBegin(common::UpdateInfo const& info) {

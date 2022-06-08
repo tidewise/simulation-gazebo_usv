@@ -31,9 +31,9 @@ namespace gazebo_usv {
 
         void updateBegin(gazebo::common::UpdateInfo const& info);
 
-        void loadRudders(sdf::ElementPtr pluginElement);
-        void loadThrusters(sdf::ElementPtr pluginElement);
-        void loadWindParameters(sdf::ElementPtr pluginElement);
+        std::vector<Rudder> loadRudders(sdf::ElementPtr pluginElement);
+        Thrusters* loadThrusters(sdf::ElementPtr pluginElement);
+        Wind* loadWindParameters(sdf::ElementPtr pluginElement);
     };
 }
 
