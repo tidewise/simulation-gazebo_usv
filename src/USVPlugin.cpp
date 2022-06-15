@@ -1,5 +1,4 @@
 #include <gazebo_usv/USVPlugin.hpp>
-#include "Utilities.hpp"
 
 using namespace std;
 using namespace gazebo;
@@ -12,21 +11,10 @@ USVPlugin::~USVPlugin() {
     delete mDirectForce;
 }
 
-void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
+void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _plugin_sdf)
 {
     mModel = _model;
-    // Import all thrusters from a model file (sdf)
-    sdf::ElementPtr modelSDF = mModel->GetSDF();
-    sdf::ElementPtr thrustersPluginElement = utilities::getPluginElementByName(
-        modelSDF, "thrusters"
-    );
 
-    // Since the following plugins are optional and uses the same filename as the thrusters plugin,
-    // it should be found by name and be ignored if not found
-    sdf::ElementPtr windPluginElement = utilities::findPluginElementByName(modelSDF, "wind_dynamics");
-    sdf::ElementPtr directForcePluginElement = utilities::findPluginElementByName(modelSDF, "direct_force");
-
-    // Initialize communication node and subscribe to gazebo topic
     mNode = transport::NodePtr(new transport::Node());
     mNode->Init();
 
@@ -36,10 +24,17 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
         boost::bind(&USVPlugin::updateBegin, this, _1)
     );
 
-    mThrusters = loadThrusters(thrustersPluginElement);
-    mRudders = loadRudders(thrustersPluginElement);
-    mWind = loadWindParameters(windPluginElement);
-    mDirectForce = loadDirectForceApplicationParameters(directForcePluginElement);
+    auto pluginName = _plugin_sdf->Get<std::string>("name");
+    if ("thrusters" == pluginName) {
+        mThrusters = loadThrusters(_plugin_sdf);
+        mRudders = loadRudders(_plugin_sdf);
+    }
+    else if ("wind_dynamics" == pluginName) {
+        mWind = loadWindParameters(_plugin_sdf);
+    }
+    else if ("direct_force" == pluginName) {
+        mDirectForce = loadDirectForceApplicationParameters(_plugin_sdf);
+    }
 }
 
 Rudder& USVPlugin::getRudderByName(std::string const& name) {
@@ -56,7 +51,7 @@ Thruster& USVPlugin::getThrusterByName(std::string const& name) {
 }
 
 std::vector<Rudder> USVPlugin::loadRudders(sdf::ElementPtr thrustersPluginElement) {
-    if (!thrustersPluginElement->HasElement("rudder")) {
+    if (!thrustersPluginElement || !thrustersPluginElement->HasElement("rudder")) {
         return {};
     }
 
@@ -72,16 +67,16 @@ std::vector<Rudder> USVPlugin::loadRudders(sdf::ElementPtr thrustersPluginElemen
 }
 
 Thrusters* USVPlugin::loadThrusters(sdf::ElementPtr thrustersPluginElement) {
-    Thrusters* thrusters = new Thrusters;
-
-    if (sdf::ElementPtr el = thrustersPluginElement->GetElement("thruster")) {
-        thrusters->load(*mActuators, mNode, mModel, thrustersPluginElement);
+    if (!thrustersPluginElement || !thrustersPluginElement->HasElement("thruster")) {
+        return nullptr;
     }
 
+    Thrusters* thrusters = new Thrusters;
+    thrusters->load(*mActuators, mNode, mModel, thrustersPluginElement);
     return thrusters;
 }
 
-Wind* USVPlugin::loadWindParameters(sdf::ElementPtr windPluginElement){
+Wind* USVPlugin::loadWindParameters(sdf::ElementPtr windPluginElement) {
     if (!windPluginElement) {
         return nullptr;
     }
@@ -111,7 +106,9 @@ void USVPlugin::updateBegin(common::UpdateInfo const& info) {
         rudder.update(*mActuators);
     }
 
-    mThrusters->update(*mActuators);
+    if (mThrusters) {
+        mThrusters->update(*mActuators);
+    }
 
     if (mWind) {
         mWind->update();

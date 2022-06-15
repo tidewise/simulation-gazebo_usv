@@ -16,7 +16,7 @@ namespace gazebo_usv {
     class USVPlugin : public gazebo::ModelPlugin {
     public:
         ~USVPlugin();
-        virtual void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf);
+        virtual void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _plugin_sdf);
         Rudder& getRudderByName(std::string const& name);
         Thruster& getThrusterByName(std::string const& name);
 
