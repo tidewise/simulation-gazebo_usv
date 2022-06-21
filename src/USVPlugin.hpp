@@ -10,12 +10,13 @@
 #include <gazebo_usv/Thrusters.hpp>
 #include <gazebo_usv/Thruster.hpp>
 #include <gazebo_usv/Wind.hpp>
+#include <gazebo_usv/DirectForceApplication.hpp>
 
 namespace gazebo_usv {
     class USVPlugin : public gazebo::ModelPlugin {
     public:
         ~USVPlugin();
-        virtual void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _sdf);
+        virtual void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _plugin_sdf);
         Rudder& getRudderByName(std::string const& name);
         Thruster& getThrusterByName(std::string const& name);
 
@@ -28,12 +29,14 @@ namespace gazebo_usv {
         std::vector<Rudder> mRudders;
         Thrusters* mThrusters = nullptr;
         Wind* mWind = nullptr;
+        DirectForceApplication* mDirectForce = nullptr;
 
         void updateBegin(gazebo::common::UpdateInfo const& info);
 
-        void loadRudders(sdf::ElementPtr pluginElement);
-        void loadThrusters(sdf::ElementPtr pluginElement);
-        void loadWindParameters(sdf::ElementPtr pluginElement);
+        std::vector<Rudder> loadRudders(sdf::ElementPtr pluginElement);
+        Thrusters* loadThrusters(sdf::ElementPtr pluginElement);
+        Wind* loadWindParameters(sdf::ElementPtr pluginElement);
+        DirectForceApplication* loadDirectForceApplicationParameters(sdf::ElementPtr pluginElement);
     };
 }
 
