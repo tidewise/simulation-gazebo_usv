@@ -22,12 +22,14 @@ void Thrusters::load(
     mDefinitions = loadThrusters(actuators, pluginElement);
 
     // Initialize communication node and subscribe to gazebo topic
-    string topicName = mModel->GetName() + "/thrusters";
+    auto pluginName = pluginElement->Get<std::string>("name");
+    string topicName = std::regex_replace(pluginName, std::regex("__"), "/") + "/thrusters";
+
     if (mCommandSubscriber) {
         mCommandSubscriber->Unsubscribe();
     }
     mCommandSubscriber =
-        node->Subscribe("~/" + topicName, &Thrusters::processThrusterCommand, this);
+        node->Subscribe("/" + topicName, &Thrusters::processThrusterCommand, this);
 
     auto worldName = GzGet((*mModel->GetWorld()), Name, ());
     gzmsg << "Thruster: receiving thruster commands from /gazebo/"

@@ -41,12 +41,14 @@ void DirectForceApplication::load(
     mLinkId = actuators.addLink(link);
 
     // Initialize communication node and subscribe to gazebo topic
-    std::string topicName = model->GetName() + "/" + link->GetName() + "/gazebo_usv_force";
+    auto pluginName = pluginElement->Get<std::string>("name");
+    pluginName = std::regex_replace(pluginName, std::regex("__"), "/");
+    std::string topicName = pluginName + "/" + link->GetName() + "/gazebo_usv_force";
     if (mCommandSubscriber) {
         mCommandSubscriber->Unsubscribe();
     }
     mCommandSubscriber =
-        node->Subscribe("~/" + topicName, &DirectForceApplication::processDirectionalForceCommand, this);
+        node->Subscribe("/" + topicName, &DirectForceApplication::processDirectionalForceCommand, this);
 
     auto worldName = model->GetWorld()->Name();
     gzmsg << "DirectForceApplication: receiving directioned force commands from /gazebo/"

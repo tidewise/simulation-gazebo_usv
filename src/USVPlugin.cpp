@@ -6,6 +6,7 @@ using namespace gazebo_usv;
 
 USVPlugin::~USVPlugin() {
     delete mWind;
+    delete mWave;
     delete mThrusters;
     delete mActuators;
     delete mDirectForce;
@@ -25,14 +26,17 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _plugin_sdf)
     );
 
     auto pluginName = _plugin_sdf->Get<std::string>("name");
-    if ("thrusters" == pluginName) {
+    if (pluginName.find("thrusters") != std::string::npos) {
         mThrusters = loadThrusters(_plugin_sdf);
         mRudders = loadRudders(_plugin_sdf);
     }
-    else if ("wind_dynamics" == pluginName) {
+    else if (pluginName.find("wind_dynamics") != std::string::npos) {
         mWind = loadWindParameters(_plugin_sdf);
     }
-    else if ("direct_force" == pluginName) {
+    else if (pluginName.find("wave_dynamics") != std::string::npos) {
+        mWave = loadWaveParameters(_plugin_sdf);
+    }
+    else if (pluginName.find("direct_force") != std::string::npos) {
         mDirectForce = loadDirectForceApplicationParameters(_plugin_sdf);
     }
 }
@@ -87,6 +91,17 @@ Wind* USVPlugin::loadWindParameters(sdf::ElementPtr windPluginElement) {
     return wind;
 }
 
+Wave* USVPlugin::loadWaveParameters(sdf::ElementPtr wavePluginElement) {
+    if (!wavePluginElement) {
+        return nullptr;
+    }
+
+    Wave* wave = new Wave;
+    wave->load(mModel, mNode, wavePluginElement);
+
+    return wave;
+}
+
 DirectForceApplication* USVPlugin::loadDirectForceApplicationParameters(
     sdf::ElementPtr directForcePluginElement)
 {
@@ -112,6 +127,10 @@ void USVPlugin::updateBegin(common::UpdateInfo const& info) {
 
     if (mWind) {
         mWind->update();
+    }
+
+    if (mWave) {
+        mWave->update();
     }
 
     if (mDirectForce) {

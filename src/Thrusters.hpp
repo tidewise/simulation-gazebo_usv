@@ -10,6 +10,7 @@
 
 #include "msgs.pb.h"
 #include <gazebo_usv/Thruster.hpp>
+#include <regex>
 
 namespace gazebo_usv {
     class Actuators;

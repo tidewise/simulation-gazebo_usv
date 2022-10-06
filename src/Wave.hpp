@@ -1,15 +1,16 @@
-#ifndef GAZEBO_WIND_PLUGIN_HPP
-#define GAZEBO_WIND_PLUGIN_HPP
+#ifndef GAZEBO_WAVE_PLUGIN_HPP
+#define GAZEBO_WAVE_PLUGIN_HPP
 
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/transport/transport.hh>
 #include <ignition/math/Vector3.hh>
+#include <time.h>
 #include <regex>
 
 namespace gazebo_usv
 {
-    class Wind
+    class Wave
     {
         typedef gazebo::physics::ModelPtr ModelPtr;
         typedef gazebo::physics::LinkPtr LinkPtr;
@@ -17,32 +18,34 @@ namespace gazebo_usv
         typedef gazebo::transport::SubscriberPtr SubscriberPtr;
 
     public:
-        // Parameters used to calculate the wind effects 
+        // Parameters used to calculate the Wave effects 
         struct EffectParameters
         {
             double frontal_area;
             double lateral_area;
+            double bottom_area;
+            double torque_constant;
             double length_overall;
-            double air_density;
+            double water_density;
             ignition::math::Vector3d coefficients;
         };
-        // Wind force and torque
+        // Wave force and torque
         struct Effects
         {
             ignition::math::Vector3d force;
             ignition::math::Vector3d torque;
         };
 
-        Wind() = default;
+        Wave() = default;
         /**
-         * @brief Construct a new Wind object.
+         * @brief Construct a new Wave object.
          * 
          * PS: This constructor is used mainly for easier testing.
          * 
          * @param parameters 
          */
-        Wind(EffectParameters const parameters);
-        ~Wind();
+        Wave(EffectParameters const parameters);
+        ~Wave();
 
         /**
          * @brief Loads the model properties from the SDF file and the gazebo communication node.
@@ -54,13 +57,13 @@ namespace gazebo_usv
         void load(ModelPtr const _model, NodePtr const _node, sdf::ElementPtr const _sdf);
 
         /**
-         * @brief Update the wind effects on the model.
+         * @brief Update the wave effects on the model.
          * 
          */
         void update();
 
         /**
-         * @brief Computes the wind effects on a vessel. 
+         * @brief Computes the wave effects on a vessel. 
          * 
          * Reference: 
          *  - Fossen's Handbook of Marine Craft Hydrodynamics and Motion Control: pages 188 to 192.
@@ -68,20 +71,24 @@ namespace gazebo_usv
          * PS: This method is public for testing purposes and shouldn't be used for other reasons.
          * @param body2world_orientation vessel orientation in world frame 
          * @param vessel_linear_vel_world vessel linear velocity in world frame 
-         * @param wind_velocity_world wind velocity in world frame 
+         * @param wave_velocity_world wave velocity in world frame 
          * @return Effects resulting force and torque to be applied at the vessel CoG. 
          */
-        Effects computeEffects(ignition::math::Quaterniond const body2world_orientation, ignition::math::Vector3d const vessel_linear_vel_world, ignition::math::Vector3d const wind_velocity_world) const;
+        Effects computeEffects(ignition::math::Quaterniond const body2world_orientation, ignition::math::Vector3d const vessel_linear_vel_world, ignition::math::Vector3d const wave_velocity_world, ignition::math::Vector3d const wave_frequency_world) const;
 
     private:
         ModelPtr mModel;
         NodePtr mNode;
         LinkPtr mLink;
 
-        SubscriberPtr mWindVelocitySubscriber;
+        double start_time;
+
+        SubscriberPtr mWaveVelocitySubscriber;
+        SubscriberPtr mWaveFrequencySubscriber;
 
         EffectParameters mParameters;
-        ignition::math::Vector3d mWindVelocity{};
+        ignition::math::Vector3d mWaveVelocity{};
+        ignition::math::Vector3d mWaveFrequency{};
 
         /**
          * @brief Get the reference link where force and torque will be applied
@@ -101,10 +108,11 @@ namespace gazebo_usv
         EffectParameters loadParameters(sdf::ElementPtr const el) const;
 
         /**
-         * @brief Subscriber callback for the wind velocity topic
+         * @brief Subscriber callback for the wave velocity topic
          * 
          */
-        void readWindVelocity(const ConstVector3dPtr &);
+        void readWaveVelocity(const ConstVector3dPtr &);
+        void readWaveFrequency(const ConstVector3dPtr &);
     };
 }
 

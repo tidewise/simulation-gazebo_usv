@@ -22,12 +22,13 @@ void Wind::load(ModelPtr const _model, transport::NodePtr const _node, sdf::Elem
     mNode = _node;
     mLink = getReferenceLink(mModel, _sdf);
 
-    string topicName = mModel->GetName() + "/wind_velocity";
+    auto pluginName = _sdf->Get<std::string>("name");
+    string topicName = std::regex_replace(pluginName, std::regex("__"), "/") + "/wind_velocity";
     if (mWindVelocitySubscriber)
     {
         mWindVelocitySubscriber->Unsubscribe();
     }
-    mWindVelocitySubscriber = mNode->Subscribe("~/" + topicName, &Wind::readWindVelocity, this);
+    mWindVelocitySubscriber = mNode->Subscribe("/" + topicName, &Wind::readWindVelocity, this);
     auto worldName = mModel->GetWorld()->Name();
     gzmsg << "Wind: receiving wind commands from /gazebo/"
           << worldName << "/" << topicName << endl;

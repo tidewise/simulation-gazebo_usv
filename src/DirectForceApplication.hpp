@@ -9,6 +9,7 @@
 #include <sdf/Element.hh>
 
 #include <ignition/math/Vector3.hh>
+#include <regex>
 
 namespace gazebo_usv {
     class Actuators;
