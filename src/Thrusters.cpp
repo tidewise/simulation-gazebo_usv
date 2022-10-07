@@ -32,8 +32,8 @@ void Thrusters::load(
         node->Subscribe("/" + topicName, &Thrusters::processThrusterCommand, this);
 
     auto worldName = GzGet((*mModel->GetWorld()), Name, ());
-    gzmsg << "Thruster: receiving thruster commands from /gazebo/"
-          << worldName << "/" << topicName << endl;
+    gzmsg << "Thruster: receiving thruster commands from /"
+          << topicName << endl;
 }
 
 Thruster& Thrusters::getThrusterByName(std::string const& name) {

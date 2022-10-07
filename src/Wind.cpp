@@ -30,8 +30,8 @@ void Wind::load(ModelPtr const _model, transport::NodePtr const _node, sdf::Elem
     }
     mWindVelocitySubscriber = mNode->Subscribe("/" + topicName, &Wind::readWindVelocity, this);
     auto worldName = mModel->GetWorld()->Name();
-    gzmsg << "Wind: receiving wind commands from /gazebo/"
-          << worldName << "/" << topicName << endl;
+    gzmsg << "Wind: receiving wind commands from /"
+          << topicName << endl;
 
     mParameters = loadParameters(_sdf);
 }

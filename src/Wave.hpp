@@ -70,11 +70,11 @@ namespace gazebo_usv
          * 
          * PS: This method is public for testing purposes and shouldn't be used for other reasons.
          * @param body2world_orientation vessel orientation in world frame 
-         * @param vessel_linear_vel_world vessel linear velocity in world frame 
-         * @param wave_velocity_world wave velocity in world frame 
+         * @param vessel_linear_vel_world vessel linear amplitude in world frame 
+         * @param wave_amplitude_world wave amplitude in world frame 
          * @return Effects resulting force and torque to be applied at the vessel CoG. 
          */
-        Effects computeEffects(ignition::math::Quaterniond const body2world_orientation, ignition::math::Vector3d const vessel_linear_vel_world, ignition::math::Vector3d const wave_velocity_world, ignition::math::Vector3d const wave_frequency_world) const;
+        Effects computeEffects(ignition::math::Quaterniond const body2world_orientation, ignition::math::Vector3d const vessel_linear_vel_world, ignition::math::Vector3d const wave_amplitude_world, ignition::math::Vector3d const wave_frequency_world) const;
 
     private:
         ModelPtr mModel;
@@ -83,11 +83,11 @@ namespace gazebo_usv
 
         double start_time;
 
-        SubscriberPtr mWaveVelocitySubscriber;
+        SubscriberPtr mWaveAmplitudeSubscriber;
         SubscriberPtr mWaveFrequencySubscriber;
 
         EffectParameters mParameters;
-        ignition::math::Vector3d mWaveVelocity{};
+        ignition::math::Vector3d mWaveAmplitude{};
         ignition::math::Vector3d mWaveFrequency{};
 
         /**
@@ -108,10 +108,10 @@ namespace gazebo_usv
         EffectParameters loadParameters(sdf::ElementPtr const el) const;
 
         /**
-         * @brief Subscriber callback for the wave velocity topic
+         * @brief Subscriber callback for the wave amplitude topic
          * 
          */
-        void readWaveVelocity(const ConstVector3dPtr &);
+        void readWaveAmplitude(const ConstVector3dPtr &);
         void readWaveFrequency(const ConstVector3dPtr &);
     };
 }

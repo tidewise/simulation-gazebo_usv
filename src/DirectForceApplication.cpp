@@ -51,8 +51,8 @@ void DirectForceApplication::load(
         node->Subscribe("/" + topicName, &DirectForceApplication::processDirectionalForceCommand, this);
 
     auto worldName = model->GetWorld()->Name();
-    gzmsg << "DirectForceApplication: receiving directioned force commands from /gazebo/"
-          << worldName << "/" << model->GetName() << "/" << link->GetName() << "/gazebo_usv_force" << std::endl;
+    gzmsg << "DirectForceApplication: receiving directioned force commands from /"
+          << pluginName << "/" << link->GetName() << "/gazebo_usv_force" << std::endl;
 }
 
 void DirectForceApplication::processDirectionalForceCommand(ConstVector3dPtr const& force_msg) {
