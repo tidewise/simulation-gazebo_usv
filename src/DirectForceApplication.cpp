@@ -7,6 +7,7 @@
 #include <gazebo/physics/World.hh>
 
 #include <gazebo_usv/Actuators.hpp>
+#include <regex>
 
 using namespace gazebo_usv;
 

@@ -5,7 +5,6 @@
 #include <gazebo/physics/physics.hh>
 #include <gazebo/transport/transport.hh>
 #include <ignition/math/Vector3.hh>
-#include <regex>
 
 namespace gazebo_usv
 {

@@ -2,6 +2,7 @@
 #include "Utilities.hpp"
 #include "Actuators.hpp"
 #include "USVPlugin.hpp"
+#include <regex>
 
 using namespace std;
 using namespace gazebo;

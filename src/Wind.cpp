@@ -1,5 +1,6 @@
 #include "Wind.hpp"
 #include "Utilities.hpp"
+#include <regex>
 
 using namespace std;
 using namespace gazebo;

@@ -6,7 +6,6 @@
 #include <gazebo/transport/transport.hh>
 #include <ignition/math/Vector3.hh>
 #include <time.h>
-#include <regex>
 
 namespace gazebo_usv
 {
@@ -81,7 +80,10 @@ namespace gazebo_usv
         NodePtr mNode;
         LinkPtr mLink;
 
-        double start_time;
+        double phase_x;
+        double phase_y;
+        double phase_z;
+        double phase_n;
 
         SubscriberPtr mWaveAmplitudeSubscriber;
         SubscriberPtr mWaveFrequencySubscriber;

@@ -1,5 +1,8 @@
 #include "Wave.hpp"
 #include "Utilities.hpp"
+#include <cstdlib> 
+#include <regex>
+#include <math.h>
 
 using namespace std;
 using namespace gazebo;
@@ -50,6 +53,12 @@ void Wave::load(ModelPtr const _model, transport::NodePtr const _node, sdf::Elem
           << topicNameAmplitude << "and /" << topicNameFrequency << endl;
 
     mParameters = loadParameters(_sdf);
+    std::srand(static_cast<unsigned int>(time(NULL)));
+    phase_x = M_PI * (double) rand()/RAND_MAX;
+    phase_y = M_PI * (double) rand()/RAND_MAX;
+    phase_z = M_PI * (double) rand()/RAND_MAX;
+    phase_n = M_PI * (double) rand()/RAND_MAX;
+
 }
 
 physics::LinkPtr Wave::getReferenceLink(physics::ModelPtr const _model, sdf::ElementPtr const _sdf) const
@@ -120,18 +129,20 @@ Wave::Effects Wave::computeEffects(Quaterniond const body2world_orientation, Vec
     double wave_coeff_z = mParameters.coefficients.Z();
     double wave_coeff_n = mParameters.torque_constant *sin(2 * angle_of_attack.Radian());
 
+
     // Compute the wave's time coefficients
     time_t seconds = time(NULL);
-    double wave_coeff_time_x = sin(6.28*seconds*wave_frequency_world.X());
-    double wave_coeff_time_y = sin(6.28*seconds*wave_frequency_world.Y());
-    double wave_coeff_time_z = sin(6.28*seconds*wave_frequency_world.Z());
+    double wave_coeff_time_x = sin(M_PI*2*seconds*wave_frequency_world.X() + phase_x);
+    double wave_coeff_time_y = sin(M_PI*2*seconds*wave_frequency_world.Y() + phase_y);
+    double wave_coeff_time_z = sin(M_PI*2*seconds*wave_frequency_world.Z() + phase_z);
+    double wave_coeff_time_n = sin(M_PI*2*seconds*wave_frequency_world.X() + phase_n);
 
     // Compute wave effects for X, Y and N
     Effects wave_effects;
     wave_effects.force[0] = 0.5 * wave_coeff_time_x * mParameters.water_density * relative_wave_amplitude_body.SquaredLength() * wave_coeff_x * mParameters.frontal_area;
     wave_effects.force[1] = 0.5 * wave_coeff_time_y * mParameters.water_density * relative_wave_amplitude_body.SquaredLength() * wave_coeff_y * mParameters.lateral_area;
     wave_effects.force[2] = 0.5 * wave_coeff_time_z * mParameters.water_density * relative_wave_amplitude_body.SquaredLength() * wave_coeff_z * mParameters.bottom_area;
-    wave_effects.torque[2] = 0.5 * mParameters.water_density * relative_wave_amplitude_body.SquaredLength() * wave_coeff_n * mParameters.lateral_area * mParameters.length_overall;
+    wave_effects.torque[0] = 0.5 * wave_coeff_time_n * mParameters.water_density * relative_wave_amplitude_body.SquaredLength() * wave_coeff_n * mParameters.lateral_area * mParameters.length_overall;
     return wave_effects;
 }
 
