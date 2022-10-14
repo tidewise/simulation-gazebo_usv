@@ -2,7 +2,6 @@
 #include "Utilities.hpp"
 #include "Actuators.hpp"
 #include "USVPlugin.hpp"
-#include <regex>
 
 using namespace std;
 using namespace gazebo;
@@ -24,7 +23,7 @@ void Thrusters::load(
 
     // Initialize communication node and subscribe to gazebo topic
     auto pluginName = pluginElement->Get<std::string>("name");
-    string topicName = std::regex_replace(pluginName, std::regex("__"), "/") + "/thrusters";
+    string topicName = utilities::getTopicNameFromPluginName(pluginName) + "/thrusters";
 
     if (mCommandSubscriber) {
         mCommandSubscriber->Unsubscribe();

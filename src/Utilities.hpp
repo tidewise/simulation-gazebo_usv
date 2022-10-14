@@ -74,6 +74,13 @@ namespace gazebo_usv {
                 return default_value;
             }
         }
+
+        /** Get a topic name from the given plugin name
+         *
+         * This method substitues '__' in the plugin name for the '/' in the topic name
+         */
+        std::string getTopicNameFromPluginName(std::string const& pluginName);
+
     }
 
 }

@@ -1,6 +1,5 @@
 #include "Wind.hpp"
 #include "Utilities.hpp"
-#include <regex>
 
 using namespace std;
 using namespace gazebo;
@@ -24,7 +23,7 @@ void Wind::load(ModelPtr const _model, transport::NodePtr const _node, sdf::Elem
     mLink = getReferenceLink(mModel, _sdf);
 
     auto pluginName = _sdf->Get<std::string>("name");
-    string topicName = std::regex_replace(pluginName, std::regex("__"), "/") + "/wind_velocity";
+    string topicName = utilities::getTopicNameFromPluginName(pluginName) + "/wind_velocity";
     if (mWindVelocitySubscriber)
     {
         mWindVelocitySubscriber->Unsubscribe();

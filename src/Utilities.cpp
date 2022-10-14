@@ -1,5 +1,6 @@
 #include "Utilities.hpp"
 #include <gazebo/common/Exception.hh>
+#include <regex>
 
 using namespace gazebo_usv;
 
@@ -64,4 +65,9 @@ sdf::ElementPtr utilities::getPluginElementByName(
     }
 
     return element;
+}
+
+std::string utilities::getTopicNameFromPluginName( std::string const& pluginName )
+{
+    return std::regex_replace(pluginName, std::regex("__"), "/");
 }

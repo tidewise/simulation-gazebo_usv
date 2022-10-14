@@ -1,7 +1,6 @@
 #include "Wave.hpp"
 #include "Utilities.hpp"
 #include <cstdlib> 
-#include <regex>
 #include <math.h>
 
 using namespace std;
@@ -30,7 +29,7 @@ void Wave::load(ModelPtr const _model, transport::NodePtr const _node, sdf::Elem
     mLink = getReferenceLink(mModel, _sdf);
     
     auto pluginName = _sdf->Get<std::string>("name");
-    string topicName = std::regex_replace(pluginName, std::regex("__"), "/") ;
+    string topicName = utilities::getTopicNameFromPluginName(pluginName) ;
     
     string topicNameAmplitude = topicName + "/wave_amplitude";
 
