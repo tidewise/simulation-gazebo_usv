@@ -8,6 +8,7 @@
   <author>sylvain.joyeux@tidewise.io</author>
   <license>LGPLv2+</license>
   <depend package="base/cmake" />
+  <depend package="base/types" />
   <depend package="simulation/gazebo" />
   <depend package="simulation/gazebo_underwater" />
   <depend package="libprotobuf" />

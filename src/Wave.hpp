@@ -32,7 +32,6 @@ namespace gazebo_usv
         double phase_x;
         double phase_y;
         double phase_z;
-        double phase_n;
 
         Wave() = default;
         /**
