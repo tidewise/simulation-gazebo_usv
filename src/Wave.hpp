@@ -5,7 +5,7 @@
 #include <gazebo/physics/physics.hh>
 #include <gazebo/transport/transport.hh>
 #include <ignition/math/Vector3.hh>
-#include <time.h>
+#include "base/Time.hpp"
 
 namespace gazebo_usv
 {
@@ -28,6 +28,11 @@ namespace gazebo_usv
             ignition::math::Vector3d force;
             ignition::math::Vector3d torque;
         };
+        //Wave phases to be defined
+        double phase_x;
+        double phase_y;
+        double phase_z;
+        double phase_n;
 
         Wave() = default;
         /**
@@ -67,17 +72,12 @@ namespace gazebo_usv
          * @param wave_amplitude_world wave amplitude in world frame 
          * @return Effects resulting force and torque to be applied at the vessel CoG. 
          */
-        Effects computeEffects(ignition::math::Vector3d const wave_amplitude_world, ignition::math::Vector3d const wave_frequency_world) const;
+        Effects computeEffects(double seconds,ignition::math::Quaterniond const body2world_orientation, ignition::math::Vector3d const vessel_linear_vel_world, ignition::math::Vector3d const wave_amplitude_world, ignition::math::Vector3d const wave_frequency_world) const;
 
     private:
         ModelPtr mModel;
         NodePtr mNode;
         LinkPtr mLink;
-
-        double phase_x;
-        double phase_y;
-        double phase_z;
-        double phase_n;
 
         SubscriberPtr mWaveAmplitudeSubscriber;
         SubscriberPtr mWaveFrequencySubscriber;

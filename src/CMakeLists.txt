@@ -14,7 +14,7 @@ rock_library(gazebo_usv
     SOURCES USVPlugin.cpp Thrusters.cpp Thruster.cpp Actuators.cpp Utilities.cpp Rudder.cpp Wind.cpp Wave.cpp DirectForceApplication.cpp ${msgs_SRCS}
     HEADERS USVPlugin.hpp Thrusters.hpp Thruster.hpp Actuators.hpp Utilities.hpp Rudder.hpp Wind.hpp Wave.hpp DirectForceApplication.hpp
     ${__boost_deps}
-    DEPS_PKGCONFIG gazebo sdformat protobuf gazebo_underwater_msgs)
+    DEPS_PKGCONFIG base-types gazebo sdformat protobuf gazebo_underwater_msgs)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/msgs.pb.h
     DESTINATION include/${PROJECT_NAME})
