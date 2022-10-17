@@ -20,13 +20,7 @@ namespace gazebo_usv
         // Parameters used to calculate the Wave effects 
         struct EffectParameters
         {
-            double frontal_area;
-            double lateral_area;
-            double bottom_area;
             double torque_constant;
-            double length_overall;
-            double water_density;
-            ignition::math::Vector3d coefficients;
         };
         // Wave force and torque
         struct Effects
@@ -73,7 +67,7 @@ namespace gazebo_usv
          * @param wave_amplitude_world wave amplitude in world frame 
          * @return Effects resulting force and torque to be applied at the vessel CoG. 
          */
-        Effects computeEffects(ignition::math::Quaterniond const body2world_orientation, ignition::math::Vector3d const vessel_linear_vel_world, ignition::math::Vector3d const wave_amplitude_world, ignition::math::Vector3d const wave_frequency_world) const;
+        Effects computeEffects(ignition::math::Vector3d const wave_amplitude_world, ignition::math::Vector3d const wave_frequency_world) const;
 
     private:
         ModelPtr mModel;
