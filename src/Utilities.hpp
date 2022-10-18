@@ -79,7 +79,7 @@ namespace gazebo_usv {
          *
          * This method substitues '__' in the plugin name for the '/' in the topic name
          */
-        std::string getTopicNameFromPluginName(std::string const& pluginName);
+        std::string getNamespaceFromPluginName(std::string const& pluginName);
 
     }
 

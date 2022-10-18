@@ -23,7 +23,7 @@ void Thrusters::load(
 
     // Initialize communication node and subscribe to gazebo topic
     auto pluginName = pluginElement->Get<std::string>("name");
-    string topicName = utilities::getTopicNameFromPluginName(pluginName) + "/thrusters";
+    string topicName = utilities::getNamespaceFromPluginName(pluginName) + "/thrusters";
 
     if (mCommandSubscriber) {
         mCommandSubscriber->Unsubscribe();

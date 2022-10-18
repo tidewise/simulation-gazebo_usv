@@ -25,18 +25,18 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _plugin_sdf)
         boost::bind(&USVPlugin::updateBegin, this, _1)
     );
 
-    auto pluginName = _plugin_sdf->Get<std::string>("name");
-    if (pluginName.find("thrusters") != std::string::npos) {
+    auto plugin_name = _plugin_sdf->Get<std::string>("name");
+    if (plugin_name.find("thrusters") != std::string::npos) {
         mThrusters = loadThrusters(_plugin_sdf);
         mRudders = loadRudders(_plugin_sdf);
     }
-    else if (pluginName.find("wind_dynamics") != std::string::npos) {
+    else if (plugin_name.find("wind_dynamics") != std::string::npos) {
         mWind = loadWindParameters(_plugin_sdf);
     }
-    else if (pluginName.find("wave_dynamics") != std::string::npos) {
+    else if (plugin_name.find("wave_dynamics") != std::string::npos) {
         mWave = loadWaveParameters(_plugin_sdf);
     }
-    else if (pluginName.find("direct_force") != std::string::npos) {
+    else if (plugin_name.find("direct_force") != std::string::npos) {
         mDirectForce = loadDirectForceApplicationParameters(_plugin_sdf);
     }
 }

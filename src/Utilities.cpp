@@ -67,7 +67,7 @@ sdf::ElementPtr utilities::getPluginElementByName(
     return element;
 }
 
-std::string utilities::getTopicNameFromPluginName( std::string const& pluginName )
+std::string utilities::getNamespaceFromPluginName( std::string const& pluginName )
 {
     return std::regex_replace(pluginName, std::regex("__"), "/");
 }

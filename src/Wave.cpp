@@ -29,7 +29,7 @@ void Wave::load(ModelPtr const _model, transport::NodePtr const _node, sdf::Elem
     mLink = getReferenceLink(mModel, _sdf);
     
     auto pluginName = _sdf->Get<std::string>("name");
-    string topicName = utilities::getTopicNameFromPluginName(pluginName);
+    string topicName = utilities::getNamespaceFromPluginName(pluginName);
     
     string topicNameAmplitude = topicName + "/wave_amplitude";
 

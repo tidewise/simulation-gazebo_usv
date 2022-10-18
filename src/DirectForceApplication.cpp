@@ -43,7 +43,7 @@ void DirectForceApplication::load(
 
     // Initialize communication node and subscribe to gazebo topic
     auto pluginName = pluginElement->Get<std::string>("name");
-    std::string topicName = utilities::getTopicNameFromPluginName(pluginName) + "/" + link->GetName() + "/gazebo_usv_force";
+    std::string topicName = utilities::getNamespaceFromPluginName(pluginName) + "/" + link->GetName() + "/gazebo_usv_force";
     if (mCommandSubscriber) {
         mCommandSubscriber->Unsubscribe();
     }
