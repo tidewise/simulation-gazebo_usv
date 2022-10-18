@@ -71,7 +71,7 @@ namespace gazebo_usv
          * @param wave_amplitude_world wave amplitude in world frame 
          * @return Effects resulting force and torque to be applied at the vessel CoG. 
          */
-        Effects computeEffects(double seconds,ignition::math::Quaterniond const body2world_orientation, ignition::math::Vector3d const vessel_linear_vel_world, ignition::math::Vector3d const wave_amplitude_world, ignition::math::Vector3d const wave_frequency_world) const;
+        Effects computeEffects(double seconds, ignition::math::Vector3d const wave_amplitude_world, ignition::math::Vector3d const wave_frequency_world) const;
 
     private:
         ModelPtr mModel;
