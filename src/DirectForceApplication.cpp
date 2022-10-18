@@ -7,7 +7,7 @@
 #include <gazebo/physics/World.hh>
 
 #include <gazebo_usv/Actuators.hpp>
-#include <regex>
+#include "Utilities.hpp"
 
 using namespace gazebo_usv;
 
@@ -43,8 +43,7 @@ void DirectForceApplication::load(
 
     // Initialize communication node and subscribe to gazebo topic
     auto pluginName = pluginElement->Get<std::string>("name");
-    pluginName = std::regex_replace(pluginName, std::regex("__"), "/");
-    std::string topicName = pluginName + "/" + link->GetName() + "/gazebo_usv_force";
+    std::string topicName = utilities::getTopicNameFromPluginName(pluginName) + "/" + link->GetName() + "/gazebo_usv_force";
     if (mCommandSubscriber) {
         mCommandSubscriber->Unsubscribe();
     }
@@ -53,7 +52,7 @@ void DirectForceApplication::load(
 
     auto worldName = model->GetWorld()->Name();
     gzmsg << "DirectForceApplication: receiving directioned force commands from /"
-          << pluginName << "/" << link->GetName() << "/gazebo_usv_force" << std::endl;
+          << topicName << std::endl;
 }
 
 void DirectForceApplication::processDirectionalForceCommand(ConstVector3dPtr const& force_msg) {
