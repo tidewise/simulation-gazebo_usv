@@ -5,41 +5,41 @@
 using namespace gazebo_usv;
 
 sdf::ElementPtr utilities::findPluginElement(
-    sdf::ElementPtr enclosing, std::string const& fileName
+    sdf::ElementPtr enclosing, std::string const& file_name
 ) {
-    sdf::ElementPtr pluginElement = enclosing->GetElement("plugin");
-    while (pluginElement)
+    sdf::ElementPtr plugin_element = enclosing->GetElement("plugin");
+    while (plugin_element)
     {
-        if (pluginElement->Get<std::string>("filename") == fileName) {
-            gzmsg << "Found plugin: " << pluginElement->Get<std::string>("name")
-                  << " (" << fileName << ")" << std::endl;
-            return pluginElement;
+        if (plugin_element->Get<std::string>("filename") == file_name) {
+            gzmsg << "Found plugin: " << plugin_element->Get<std::string>("name")
+                  << " (" << file_name << ")" << std::endl;
+            return plugin_element;
         }
-        pluginElement = pluginElement->GetNextElement("plugin");
+        plugin_element = plugin_element->GetNextElement("plugin");
     }
     return sdf::ElementPtr();
 }
 
 sdf::ElementPtr utilities::findPluginElementByName(
-    sdf::ElementPtr enclosing, std::string const& pluginName
+    sdf::ElementPtr enclosing, std::string const& plugin_name
 ) {
-    sdf::ElementPtr pluginElement = enclosing->GetElement("plugin");
-    while (pluginElement)
+    sdf::ElementPtr plugin_element = enclosing->GetElement("plugin");
+    while (plugin_element)
     {
-        if (pluginElement->Get<std::string>("name") == pluginName) {
-            gzmsg << "Found plugin: " << pluginElement->Get<std::string>("name")
-                  << " (" << pluginName << ")" << std::endl;
-            return pluginElement;
+        if (plugin_element->Get<std::string>("name") == plugin_name) {
+            gzmsg << "Found plugin: " << plugin_element->Get<std::string>("name")
+                  << " (" << plugin_name << ")" << std::endl;
+            return plugin_element;
         }
-        pluginElement = pluginElement->GetNextElement("plugin");
+        plugin_element = plugin_element->GetNextElement("plugin");
     }
     return sdf::ElementPtr();
 }
 
 sdf::ElementPtr utilities::getPluginElement(
-    sdf::ElementPtr enclosing, std::string const& fileName
+    sdf::ElementPtr enclosing, std::string const& file_name
 ) {
-    auto element = findPluginElement(enclosing, fileName);
+    auto element = findPluginElement(enclosing, file_name);
 
     if (!element) {
         // TODO: change this error message to be more generic
@@ -54,20 +54,20 @@ sdf::ElementPtr utilities::getPluginElement(
 }
 
 sdf::ElementPtr utilities::getPluginElementByName(
-    sdf::ElementPtr enclosing, std::string const& pluginName
+    sdf::ElementPtr enclosing, std::string const& plugin_name
 ) {
-    auto element = findPluginElementByName(enclosing, pluginName);
+    auto element = findPluginElementByName(enclosing, plugin_name);
 
     if (!element) {
         std::string msg =
-            "Unable to find any plugin named " + pluginName + " in the SDF object.\n";
+            "Unable to find any plugin named " + plugin_name + " in the SDF object.\n";
         gzthrow(msg);
     }
 
     return element;
 }
 
-std::string utilities::getNamespaceFromPluginName( std::string const& pluginName )
+std::string utilities::getNamespaceFromPluginName( std::string const& plugin_name )
 {
-    return std::regex_replace(pluginName, std::regex("__"), "/");
+    return std::regex_replace(plugin_name, std::regex("__"), "/");
 }

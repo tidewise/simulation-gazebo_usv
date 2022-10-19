@@ -6,34 +6,34 @@ using namespace gazebo;
 using namespace gazebo_usv;
 using namespace ignition::math;
 
-Wind::Wind(Wind::EffectParameters const parameters) : mParameters(parameters) {}
+Wind::Wind(Wind::EffectParameters const parameters) : m_parameters(parameters) {}
 
 Wind::~Wind()
 {
-    if (mWindVelocitySubscriber)
+    if (m_wind_velocity_subscriber)
     {
-        mWindVelocitySubscriber->Unsubscribe();
+        m_wind_velocity_subscriber->Unsubscribe();
     }
 }
 
 void Wind::load(ModelPtr const _model, transport::NodePtr const _node, sdf::ElementPtr const _sdf)
 {
-    mModel = _model;
-    mNode = _node;
-    mLink = getReferenceLink(mModel, _sdf);
+    m_model = _model;
+    m_node = _node;
+    m_link = getReferenceLink(m_model, _sdf);
 
     auto pluginName = _sdf->Get<std::string>("name");
     string topicName = utilities::getNamespaceFromPluginName(pluginName) + "/wind_velocity";
-    if (mWindVelocitySubscriber)
+    if (m_wind_velocity_subscriber)
     {
-        mWindVelocitySubscriber->Unsubscribe();
+        m_wind_velocity_subscriber->Unsubscribe();
     }
-    mWindVelocitySubscriber = mNode->Subscribe("/" + topicName, &Wind::readWindVelocity, this);
-    auto worldName = mModel->GetWorld()->Name();
+    m_wind_velocity_subscriber = m_node->Subscribe("/" + topicName, &Wind::readWindVelocity, this);
+    auto worldName = m_model->GetWorld()->Name();
     gzmsg << "Wind: receiving wind commands from /"
           << topicName << endl;
 
-    mParameters = loadParameters(_sdf);
+    m_parameters = loadParameters(_sdf);
 }
 
 physics::LinkPtr Wind::getReferenceLink(physics::ModelPtr const _model, sdf::ElementPtr const _sdf) const
@@ -77,7 +77,7 @@ Wind::EffectParameters Wind::loadParameters(sdf::ElementPtr el) const
 
 void Wind::readWindVelocity(const ConstVector3dPtr &velocity)
 {
-    mWindVelocity = Vector3d(velocity->x(), velocity->y(), velocity->z());
+    m_wind_velocity = Vector3d(velocity->x(), velocity->y(), velocity->z());
 }
 
 Wind::Effects Wind::computeEffects(Quaterniond const body2world_orientation, Vector3d const vessel_linear_vel_world, Vector3d const wind_velocity_world) const
@@ -92,24 +92,24 @@ Wind::Effects Wind::computeEffects(Quaterniond const body2world_orientation, Vec
     // Compute the wind's angle of attack and its coefficients
     double angle_of_attack_rad = -atan2(relative_wind_velocity_body.Y(), relative_wind_velocity_body.X());
     Angle angle_of_attack(angle_of_attack_rad);
-    double wind_coeff_x = -mParameters.coefficients.X() * cos(angle_of_attack.Radian());
-    double wind_coeff_y = mParameters.coefficients.Y() * sin(angle_of_attack.Radian());
-    double wind_coeff_n = mParameters.coefficients.Z() * sin(2 * angle_of_attack.Radian());
+    double wind_coeff_x = -m_parameters.coefficients.X() * cos(angle_of_attack.Radian());
+    double wind_coeff_y = m_parameters.coefficients.Y() * sin(angle_of_attack.Radian());
+    double wind_coeff_n = m_parameters.coefficients.Z() * sin(2 * angle_of_attack.Radian());
 
     // Compute wind effects for X, Y and N
     Effects wind_effects;
-    wind_effects.force[0] = 0.5 * mParameters.air_density * relative_wind_velocity_body.SquaredLength() * wind_coeff_x * mParameters.frontal_area;
-    wind_effects.force[1] = 0.5 * mParameters.air_density * relative_wind_velocity_body.SquaredLength() * wind_coeff_y * mParameters.lateral_area;
-    wind_effects.torque[2] = 0.5 * mParameters.air_density * relative_wind_velocity_body.SquaredLength() * wind_coeff_n * mParameters.lateral_area * mParameters.length_overall;
+    wind_effects.force[0] = 0.5 * m_parameters.air_density * relative_wind_velocity_body.SquaredLength() * wind_coeff_x * m_parameters.frontal_area;
+    wind_effects.force[1] = 0.5 * m_parameters.air_density * relative_wind_velocity_body.SquaredLength() * wind_coeff_y * m_parameters.lateral_area;
+    wind_effects.torque[2] = 0.5 * m_parameters.air_density * relative_wind_velocity_body.SquaredLength() * wind_coeff_n * m_parameters.lateral_area * m_parameters.length_overall;
     return wind_effects;
 }
 
 void Wind::update()
 {
     // Compute the new force and torque for this timestep 
-    Effects effects = computeEffects(mModel->WorldPose().Rot(), mModel->WorldLinearVel(), mWindVelocity);
+    Effects effects = computeEffects(m_model->WorldPose().Rot(), m_model->WorldLinearVel(), m_wind_velocity);
 
     // Apply force and torque
-    mLink->AddRelativeForce(effects.force);
-    mLink->AddRelativeTorque(effects.torque);
+    m_link->AddRelativeForce(effects.force);
+    m_link->AddRelativeTorque(effects.torque);
 }

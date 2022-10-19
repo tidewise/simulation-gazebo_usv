@@ -21,14 +21,14 @@ namespace gazebo_usv {
         ~DirectForceApplication();
         void load(
             Actuators& actuators, gazebo::physics::ModelPtr model,
-            gazebo::transport::NodePtr node, sdf::ElementPtr pluginElement
+            gazebo::transport::NodePtr node, sdf::ElementPtr plugin_element
         );
         void update(Actuators& actuators);
 
     private:
-        gazebo::transport::SubscriberPtr mCommandSubscriber;
-        ignition::math::Vector3d mForceCmd;
-        size_t mLinkId;
+        gazebo::transport::SubscriberPtr m_command_subscriber;
+        ignition::math::Vector3d m_force_cmd;
+        size_t m_link_id;
 
         void processDirectionalForceCommand(ConstVector3dPtr const& force_msg);
     };

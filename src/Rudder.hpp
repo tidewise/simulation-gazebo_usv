@@ -25,16 +25,16 @@ namespace gazebo_usv {
         Vector3d getFlowVelocity() const;
 
     private:
-        std::string mLinkName;
-        gazebo::physics::LinkPtr mLink;
-        Thruster* mAssociatedThruster = nullptr;
-        size_t mActuatorID;
+        std::string m_link_name;
+        gazebo::physics::LinkPtr m_link;
+        Thruster* m_associated_thruster = nullptr;
+        size_t m_actuator_id;
 
-        float mFluidDensity = 1000;
-        float mArea = 1;
-        float mLiftK = 1.5;
-        float mDragK = 1;
-        float mThrustToSpeedK = 0;
+        float m_fluid_density = 1000;
+        float m_area = 1;
+        float m_lift_k = 1.5;
+        float m_drag_k = 1;
+        float m_thrust_to_speed_k = 0;
     };
 }
 

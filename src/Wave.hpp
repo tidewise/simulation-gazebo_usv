@@ -29,9 +29,9 @@ namespace gazebo_usv
             ignition::math::Vector3d torque;
         };
         //Wave phases to be defined
-        double phase_x;
-        double phase_y;
-        double phase_z;
+        double m_phase_x;
+        double m_phase_y;
+        double m_phase_z;
 
         Wave() = default;
         /**
@@ -74,16 +74,16 @@ namespace gazebo_usv
         Effects computeEffects(double seconds, ignition::math::Vector3d const wave_amplitude_world, ignition::math::Vector3d const wave_frequency_world) const;
 
     private:
-        ModelPtr mModel;
-        NodePtr mNode;
-        LinkPtr mLink;
+        ModelPtr m_model;
+        NodePtr m_node;
+        LinkPtr m_link;
 
-        SubscriberPtr mWaveAmplitudeSubscriber;
-        SubscriberPtr mWaveFrequencySubscriber;
+        SubscriberPtr m_wave_amplitude_subscriber;
+        SubscriberPtr m_wave_frequency_subscriber;
 
-        EffectParameters mParameters;
-        ignition::math::Vector3d mWaveAmplitude{};
-        ignition::math::Vector3d mWaveFrequency{};
+        EffectParameters m_parameters;
+        ignition::math::Vector3d m_wave_amplitude{};
+        ignition::math::Vector3d m_wave_frequency{};
 
         /**
          * @brief Get the reference link where force and torque will be applied

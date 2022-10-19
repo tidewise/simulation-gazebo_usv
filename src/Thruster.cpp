@@ -19,6 +19,6 @@ float Thruster::getEffort() const {
 float Thruster::getAdvanceSpeed() const {
     auto vel = link->WorldLinearVel();
     auto pose = link->WorldPose();
-    auto forwardI = pose.Rot().RotateVector(Vector3d::UnitX);
-    return forwardI.Dot(vel);
+    auto forward_i = pose.Rot().RotateVector(Vector3d::UnitX);
+    return forward_i.Dot(vel);
 }

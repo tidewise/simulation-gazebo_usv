@@ -34,9 +34,9 @@ TEST_F(WaveTest, it_applies_force_in_the_world_x_axis)
     wave_amplitude = Vector3d({1, 0, 0});
     wave_frequency = Vector3d({0.3, 0, 0});
     auto plugin = this->plugin();
-    plugin.phase_x = M_PI/2;
-    plugin.phase_y = M_PI/2;
-    plugin.phase_z = M_PI/2;
+    plugin.m_phase_x = M_PI/2;
+    plugin.m_phase_y = M_PI/2;
+    plugin.m_phase_z = M_PI/2;
     double current_time = 0;
 
     auto effects = plugin.computeEffects(current_time, wave_amplitude,wave_frequency);
@@ -50,9 +50,9 @@ TEST_F(WaveTest, it_applies_force_in_the_world_x_axis_at_different_times)
     wave_amplitude = Vector3d({1, 0, 0});
     wave_frequency = Vector3d({0.3, 0, 0});
     auto plugin = this->plugin();
-    plugin.phase_x = M_PI/2;
-    plugin.phase_y = M_PI/2;
-    plugin.phase_z = M_PI/2;
+    plugin.m_phase_x = M_PI/2;
+    plugin.m_phase_y = M_PI/2;
+    plugin.m_phase_z = M_PI/2;
     double current_time = M_PI;
 
     auto effects = plugin.computeEffects(current_time, wave_amplitude,wave_frequency);
@@ -66,9 +66,9 @@ TEST_F(WaveTest, it_applies_force_in_the_world_y_axis)
     wave_amplitude = Vector3d({0, 1, 0});
     wave_frequency = Vector3d({0, 0.3, 0});
     auto plugin = this->plugin();
-    plugin.phase_x = M_PI/2;
-    plugin.phase_y = M_PI/2;
-    plugin.phase_z = M_PI/2;
+    plugin.m_phase_x = M_PI/2;
+    plugin.m_phase_y = M_PI/2;
+    plugin.m_phase_z = M_PI/2;
     double current_time = 0;
 
     auto effects = plugin.computeEffects(current_time, wave_amplitude,wave_frequency);
@@ -82,9 +82,9 @@ TEST_F(WaveTest, it_applies_force_in_the_world_z_axis)
     wave_amplitude = Vector3d({0, 0, 1});
     wave_frequency = Vector3d({0, 0, 0.3});
     auto plugin = this->plugin();
-    plugin.phase_x = M_PI/2;
-    plugin.phase_y = M_PI/2;
-    plugin.phase_z = M_PI/2;
+    plugin.m_phase_x = M_PI/2;
+    plugin.m_phase_y = M_PI/2;
+    plugin.m_phase_z = M_PI/2;
     double current_time = 0;
 
     auto effects = plugin.computeEffects(current_time, wave_amplitude,wave_frequency);
@@ -98,9 +98,9 @@ TEST_F(WaveTest, it_applies_negative_force_in_world_x_positive_force_in_y_and_no
     wave_amplitude = Vector3d({1, 1, 0});
     wave_frequency = Vector3d({0.3, 0.3, 0});
     auto plugin = this->plugin();
-    plugin.phase_x = M_PI/2;
-    plugin.phase_y = -M_PI/2;
-    plugin.phase_z = M_PI/2;
+    plugin.m_phase_x = M_PI/2;
+    plugin.m_phase_y = -M_PI/2;
+    plugin.m_phase_z = M_PI/2;
     double current_time = 0;
 
     auto effects = plugin.computeEffects(current_time, wave_amplitude,wave_frequency);
@@ -114,9 +114,9 @@ TEST_F(WaveTest, it_applies_neither_force_nor_torque_when_the_wave_is_zero)
     wave_amplitude = Vector3d({0, 0, 0});
     wave_frequency = Vector3d({0.3, 0.3, 0});
     auto plugin = this->plugin();
-    plugin.phase_x = M_PI/2;
-    plugin.phase_y = M_PI/2;
-    plugin.phase_z = M_PI/2;
+    plugin.m_phase_x = M_PI/2;
+    plugin.m_phase_y = M_PI/2;
+    plugin.m_phase_z = M_PI/2;
     double current_time = 0;
 
     auto effects = plugin.computeEffects(current_time, wave_amplitude,wave_frequency);
