@@ -109,16 +109,16 @@ Wave::Effects Wave::computeEffects(double seconds, Vector3d const wave_amplitude
     plane_wave_amplitude.Z() = 0;
 
     // Compute the wave's time coefficients
-    double wave_coeff_time_x = sin(M_PI*2*seconds*wave_frequency_world.X() + m_phase_x);
-    double wave_coeff_time_y = sin(M_PI*2*seconds*wave_frequency_world.Y() + m_phase_y);
-    double wave_coeff_time_z = sin(M_PI*2*seconds*wave_frequency_world.Z() + m_phase_z);
+    double wave_force_scale_x = sin(M_PI*2*seconds*wave_frequency_world.X() + m_phase_x);
+    double wave_force_scale_y = sin(M_PI*2*seconds*wave_frequency_world.Y() + m_phase_y);
+    double wave_force_scale_z = sin(M_PI*2*seconds*wave_frequency_world.Z() + m_phase_z);
 
     // Compute wave effects for X, Y and N
     Effects wave_effects;
-    wave_effects.force[0] = wave_coeff_time_x * wave_amplitude_world.X();
-    wave_effects.force[1] = wave_coeff_time_y * wave_amplitude_world.Y();
-    wave_effects.force[2] = wave_coeff_time_z * wave_amplitude_world.Z();
-    wave_effects.torque[0] = (wave_coeff_time_y+wave_coeff_time_x) * plane_wave_amplitude.Length() * m_parameters.torque_constant;
+    wave_effects.force[0] = wave_force_scale_x * wave_amplitude_world.X();
+    wave_effects.force[1] = wave_force_scale_y * wave_amplitude_world.Y();
+    wave_effects.force[2] = wave_force_scale_z * wave_amplitude_world.Z();
+    wave_effects.torque[0] = (wave_force_scale_x+wave_force_scale_y) * plane_wave_amplitude.Length() * m_parameters.torque_constant;
     return wave_effects;
 }
 
