@@ -11,9 +11,7 @@ namespace gaz = gazebo::physics;
 
 struct WaveTest : public ::testing::Test
 {
-    typedef Wave::EffectParameters Params;
 
-    Params parameters;
     Vector3d wave_amplitude;
     Vector3d wave_frequency;
     double roll_amplitude;
@@ -21,12 +19,11 @@ struct WaveTest : public ::testing::Test
 
     WaveTest()
     {
-        parameters.torque_constant = 0.4;
     }
 
     Wave plugin()
     {
-        return Wave(parameters);
+        return Wave();
     }
     
 };

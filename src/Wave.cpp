@@ -8,10 +8,6 @@ using namespace gazebo;
 using namespace gazebo_usv;
 using namespace ignition::math;
 
-Wave::Wave(Wave::EffectParameters const parameters)
-    : m_parameters(parameters)
-{
-}
 
 Wave::~Wave()
 {
@@ -61,7 +57,6 @@ void Wave::load(ModelPtr const _model,
     gzmsg << "Wave: receiving wave commands from /" << topicNameAmplitude << "and /"
           << topicNameFrequency << endl;
 
-    m_parameters = loadParameters(_sdf);
     std::srand(static_cast<unsigned int>(time(NULL)));
     m_phase_x = M_PI * (double)rand() / RAND_MAX;
     m_phase_y = M_PI * (double)rand() / RAND_MAX;
@@ -93,15 +88,6 @@ physics::LinkPtr Wave::getReferenceLink(physics::ModelPtr const _model,
     }
 }
 
-Wave::EffectParameters Wave::loadParameters(sdf::ElementPtr el) const
-{
-    gzmsg << "Wave: Loading wave effect parameters" << endl;
-
-    EffectParameters parameters;
-    parameters.torque_constant =
-        utilities::getParameter<double>("Wave", el, "torque_constant", "", 0);
-    return parameters;
-}
 
 void Wave::readWaveAmplitude(const ConstVector3dPtr& amplitude)
 {
@@ -144,7 +130,7 @@ Wave::Effects Wave::computeEffects(double seconds,
     wave_effects.force[1] = wave_force_scale_y * wave_amplitude_world.Y();
     wave_effects.force[2] = wave_force_scale_z * wave_amplitude_world.Z();
     wave_effects.torque[0] =
-        wave_torque_scale_n * roll_amplitude_world * m_parameters.torque_constant;
+        wave_torque_scale_n * roll_amplitude_world;
     return wave_effects;
 }
 

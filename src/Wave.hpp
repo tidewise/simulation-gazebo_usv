@@ -15,10 +15,6 @@ namespace gazebo_usv {
         typedef gazebo::transport::SubscriberPtr SubscriberPtr;
 
     public:
-        // Parameters used to calculate the Wave effects
-        struct EffectParameters {
-            double torque_constant;
-        };
         // Wave force and torque
         struct Effects {
             ignition::math::Vector3d force;
@@ -31,14 +27,6 @@ namespace gazebo_usv {
         double m_phase_n;
 
         Wave() = default;
-        /**
-         * @brief Construct a new Wave object.
-         *
-         * PS: This constructor is used mainly for easier testing.
-         *
-         * @param parameters
-         */
-        Wave(EffectParameters const parameters);
         ~Wave();
 
         /**
@@ -86,7 +74,6 @@ namespace gazebo_usv {
         SubscriberPtr m_wave_frequency_subscriber;
         SubscriberPtr m_roll_subscriber;
 
-        EffectParameters m_parameters;
         ignition::math::Vector3d m_wave_amplitude{};
         ignition::math::Vector3d m_wave_frequency{};
         double m_roll_amplitude;
@@ -101,13 +88,6 @@ namespace gazebo_usv {
          */
         LinkPtr getReferenceLink(ModelPtr const model, sdf::ElementPtr const sdf) const;
 
-        /**
-         * @brief Load parameters from SDF file
-         *
-         * @param el SDF element
-         * @return EffectParameters loaded parameters
-         */
-        EffectParameters loadParameters(sdf::ElementPtr const el) const;
 
         /**
          * @brief Subscriber callback for the wave amplitude topic
