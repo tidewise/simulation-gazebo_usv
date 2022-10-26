@@ -80,15 +80,13 @@ gazebo::physics::LinkPtr utilities::getLinkFromName(gazebo::physics::ModelPtr mo
     auto link = model->GetLink(link_name_iterated);
 
     while (pos != std::string::npos) {
-        if (!link) {
-            pos = plugin_name_iterated.rfind("__");
-            plugin_prefix = plugin_name_iterated.substr(pos + 2);
-            plugin_name_iterated = plugin_name_iterated.substr(0, pos);
-            link_name_iterated = plugin_prefix + "::" + link_name_iterated;
-        }
-        else {
+        if (link) {
             break;
         }
+        pos = plugin_name_iterated.rfind("__");
+        plugin_prefix = plugin_name_iterated.substr(pos + 2);
+        plugin_name_iterated = plugin_name_iterated.substr(0, pos);
+        link_name_iterated = plugin_prefix + "::" + link_name_iterated;
         link = model->GetLink(link_name_iterated);
     }
 
