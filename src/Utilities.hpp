@@ -3,6 +3,7 @@
 
 #include <sdf/sdf.hh>
 #include <gazebo/common/Console.hh>
+#include <gazebo/physics/physics.hh>
 
 namespace gazebo_usv {
     namespace utilities {
@@ -80,6 +81,12 @@ namespace gazebo_usv {
          * This method substitues '__' in the plugin name for the '/' in the topic name
          */
         std::string getNamespaceFromPluginName(std::string const& plugin_name);
+
+        /** Get a link from the given link name
+         *
+         * This method iteratively checks if there is a model inside model, so the link can be appropriately named
+         */
+        gazebo::physics::LinkPtr getLinkFromName(gazebo::physics::ModelPtr model, std::string const& link_name, std::string const& plugin_name);
 
     }
 

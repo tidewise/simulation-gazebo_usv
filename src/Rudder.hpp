@@ -17,7 +17,7 @@ namespace gazebo_usv {
 
     public:
         Rudder(USVPlugin& plugin, Actuators& actuators, gazebo::physics::ModelPtr model,
-               sdf::ElementPtr sdf);
+               sdf::ElementPtr sdf, std::string plugin_name);
         ~Rudder();
 
         void update(Actuators& actuator);

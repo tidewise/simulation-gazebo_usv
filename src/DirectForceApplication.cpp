@@ -31,10 +31,10 @@ void DirectForceApplication::load(
         gzthrow(msg);
     }
 
-    auto link = model->GetLink(link_name);
+    auto link = utilities::getLinkFromName(model,link_name,plugin_element->Get<std::string>("name"));
     if (!link) {
         std::string msg = "DirectForceApplication: sdf model loads 'direct_force' plugin,\n"
-                          "but it's defining an invalid link name as parameter. Please make sure\n"
+                          "but it's defining an invalid link name, " + link_name + ", as parameter. Please make sure\n"
                           "that the link you're naming actually exists in the model's sdf.";
         gzthrow(msg);
     }

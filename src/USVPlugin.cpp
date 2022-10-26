@@ -62,8 +62,9 @@ std::vector<Rudder> USVPlugin::loadRudders(sdf::ElementPtr thrusters_plugin_elem
     std::vector<Rudder> rudders;
 
     sdf::ElementPtr el = thrusters_plugin_element->GetElement("rudder");
+    std::string plugin_name = thrusters_plugin_element->Get<string>("name");
     while (el) {
-        rudders.push_back(Rudder(*this, *m_actuators, m_model, el));
+        rudders.push_back(Rudder(*this, *m_actuators, m_model, el, plugin_name));
         el = el->GetNextElement("rudder");
     }
 

@@ -54,7 +54,7 @@ std::vector<Thruster> Thrusters::loadThrusters(
         // Load thrusters attributes
         Thruster def;
         def.name = el->Get<string>("name");
-        auto link = m_model->GetLink(def.name);
+        auto link = utilities::getLinkFromName(m_model,def.name,plugin_element->Get<std::string>("name"));
         if (!link) {
             gzthrow("Thruster: thruster " + def.name + " does not exist");
         }

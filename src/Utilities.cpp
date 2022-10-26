@@ -67,7 +67,31 @@ sdf::ElementPtr utilities::getPluginElementByName(
     return element;
 }
 
-std::string utilities::getNamespaceFromPluginName( std::string const& plugin_name )
+std::string utilities::getNamespaceFromPluginName(std::string const& plugin_name)
 {
     return std::regex_replace(plugin_name, std::regex("__"), "/");
+}
+gazebo::physics::LinkPtr utilities::getLinkFromName(gazebo::physics::ModelPtr model, std::string const& link_name, std::string const& plugin_name)
+{
+    std::string link_name_iterated = link_name;
+    std::string plugin_name_iterated = plugin_name.substr(0, plugin_name.rfind("__"));
+    std::size_t pos = plugin_name_iterated.rfind("__");
+    std::string plugin_prefix = plugin_name_iterated.substr(pos +2);
+    auto link = model->GetLink(link_name_iterated);
+
+    do
+    {
+        if (!link) {
+            pos = plugin_name_iterated.rfind("__");
+            plugin_prefix = plugin_name_iterated.substr(pos +2);
+            plugin_name_iterated = plugin_name_iterated.substr(0, pos);
+            link_name_iterated=plugin_prefix+"::"+link_name_iterated;
+        }else{
+            break;
+        }
+        link = model->GetLink(link_name_iterated);
+    } while (pos != std::string::npos);
+
+
+    return link;
 }
