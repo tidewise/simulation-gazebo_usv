@@ -9,7 +9,8 @@ using namespace gazebo;
 using namespace gazebo_usv;
 using namespace ignition::math;
 
-Rudder::Rudder(USVPlugin& plugin, Actuators& actuators, physics::ModelPtr model, sdf::ElementPtr sdf, std::string plugin_name) {    m_link_name = sdf->Get<string>("name");
+Rudder::Rudder(USVPlugin& plugin, Actuators& actuators, physics::ModelPtr model, sdf::ElementPtr sdf, std::string plugin_name) {    
+    m_link_name = sdf->Get<string>("name");
     m_link = utilities::getLinkFromName(model,m_link_name,plugin_name);
     if (!m_link) {
         gzthrow("Rudder: link " + m_link_name + " does not exist");
