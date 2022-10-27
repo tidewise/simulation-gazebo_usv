@@ -9,46 +9,46 @@ using namespace gazebo;
 using namespace gazebo_usv;
 using namespace ignition::math;
 
-Rudder::Rudder(USVPlugin& plugin, Actuators& actuators, physics::ModelPtr model, sdf::ElementPtr sdf) {
-    mLinkName = sdf->Get<string>("name");
-    mLink = model->GetLink(mLinkName);
-    if (!mLink) {
-        gzthrow("Rudder: link " + mLinkName + " does not exist");
+Rudder::Rudder(USVPlugin& plugin, Actuators& actuators, physics::ModelPtr model, sdf::ElementPtr sdf, std::string plugin_name) {    
+    m_link_name = sdf->Get<string>("name");
+    m_link = utilities::getLinkFromName(model,m_link_name,plugin_name);
+    if (!m_link) {
+        gzthrow("Rudder: link " + m_link_name + " does not exist");
     }
 
-    auto thrusterName = sdf->Get<string>("thrusterName");
-    if (!thrusterName.empty()) {
-        mAssociatedThruster = &plugin.getThrusterByName(thrusterName);
-        mThrustToSpeedK = sdf->Get<float>("thrustToFlowK", 0).first;
+    auto thruster_name = sdf->Get<string>("thrusterName");
+    if (!thruster_name.empty()) {
+        m_associated_thruster = &plugin.getThrusterByName(thruster_name);
+        m_thrust_to_speed_k = sdf->Get<float>("thrustToFlowK", 0).first;
     }
 
-    mActuatorID = actuators.addLink(mLink);
+    m_actuator_id = actuators.addLink(m_link);
 
-    mArea = sdf->Get<float>("area", 1).first;
-    mLiftK = sdf->Get<float>("lift_factor", 1.5).first;
-    mDragK = sdf->Get<float>("drag_factor", 1e-3).first;
+    m_area = sdf->Get<float>("area", 1).first;
+    m_lift_k = sdf->Get<float>("lift_factor", 1.5).first;
+    m_drag_k = sdf->Get<float>("drag_factor", 1e-3).first;
 }
 
 Rudder::~Rudder() {
 }
 
 std::string Rudder::getLinkName() const {
-    return mLinkName;
+    return m_link_name;
 }
 
 Vector3d Rudder::getFlowVelocity() const {
-    if (!mAssociatedThruster) {
-        return mLink->WorldLinearVel();
+    if (!m_associated_thruster) {
+        return m_link->WorldLinearVel();
     }
 
-    auto thrusterVelocity = mAssociatedThruster->getLink()->WorldLinearVel();
-    auto thrusterPose = mAssociatedThruster->getLink()->WorldPose();
-    auto thrusterX = thrusterPose.Rot().RotateVector(Vector3d::UnitX);
-    auto advanceSpeed = mAssociatedThruster->getAdvanceSpeed();
+    auto thruster_velocity = m_associated_thruster->getLink()->WorldLinearVel();
+    auto thruster_pose = m_associated_thruster->getLink()->WorldPose();
+    auto thruster_x = thruster_pose.Rot().RotateVector(Vector3d::UnitX);
+    auto advance_speed = m_associated_thruster->getAdvanceSpeed();
 
-    float velocityXSq = advanceSpeed * abs(advanceSpeed) +
-                        mThrustToSpeedK * mAssociatedThruster->getEffort();
-    return copysign(sqrt(abs(velocityXSq)), velocityXSq) * thrusterX;
+    float velocity_x_sq = advance_speed * abs(advance_speed) +
+                        m_thrust_to_speed_k * m_associated_thruster->getEffort();
+    return copysign(sqrt(abs(velocity_x_sq)), velocity_x_sq) * thruster_x;
 }
 
 void Rudder::update(Actuators& actuators) {
@@ -59,42 +59,42 @@ void Rudder::update(Actuators& actuators) {
     }
 
     // pose of body
-    auto pose = mLink->WorldPose();
+    auto pose = m_link->WorldPose();
 
     // rotate forward and upward vectors into inertial frame
-    auto forwardI = pose.Rot().RotateVector(Vector3d::UnitX);
-    auto upwardI = pose.Rot().RotateVector(Vector3d::UnitZ);
+    auto forward_i = pose.Rot().RotateVector(Vector3d::UnitX);
+    auto upward_i = pose.Rot().RotateVector(Vector3d::UnitZ);
 
-    // ldNormal vector to lift-drag-plane described in inertial frame
-    auto ldNormal = forwardI.Cross(upwardI).Normalize();
+    // ld_normal vector to lift-drag-plane described in inertial frame
+    auto ld_normal = forward_i.Cross(upward_i).Normalize();
 
     // angle of attack
-    auto velInLDPlane = ldNormal.Cross(vel.Cross(ldNormal));
+    auto vel_in_ld_plane = ld_normal.Cross(vel.Cross(ld_normal));
 
     // get direction of drag
-    auto dragDirection = -velInLDPlane.Normalized();
+    auto drag_direction = -vel_in_ld_plane.Normalized();
 
     // get direction of lift
-    auto liftDirection = ldNormal.Cross(velInLDPlane).Normalized();
+    auto liftDirection = ld_normal.Cross(vel_in_ld_plane).Normalized();
 
-    float alpha = atan2(-upwardI.Dot(velInLDPlane), forwardI.Dot(velInLDPlane));
+    float alpha = atan2(-upward_i.Dot(vel_in_ld_plane), forward_i.Dot(vel_in_ld_plane));
 
     // compute dynamic pressure
-    double speedInLDPlane = velInLDPlane.Length();
-    double q = 0.5 * mFluidDensity * speedInLDPlane * speedInLDPlane;
+    double speed_in_ld_plane = vel_in_ld_plane.Length();
+    double q = 0.5 * m_fluid_density * speed_in_ld_plane * speed_in_ld_plane;
 
     // compute cl at cp, check for stall, correct for sweep
-    double cl = mLiftK * sin(2*alpha);
+    double cl = m_lift_k * sin(2*alpha);
     // compute lift force at cp
-    auto lift = cl * q * mArea * liftDirection;
+    auto lift = cl * q * m_area * liftDirection;
 
     // compute cd at cp, check for stall, correct for sweep
-    double cd = fabs(mDragK * (1 - cos(2 * alpha)));
+    double cd = fabs(m_drag_k * (1 - cos(2 * alpha)));
 
     // drag at cp
-    auto drag = cd * q * mArea * dragDirection;
+    auto drag = cd * q * m_area * drag_direction;
 
-    Vector3d worldForce = lift + drag;
-    Vector3d linkForce = pose.Rot().RotateVectorReverse(worldForce);
-    actuators.applyForce(mActuatorID, linkForce);
+    Vector3d world_force = lift + drag;
+    Vector3d link_force = pose.Rot().RotateVectorReverse(world_force);
+    actuators.applyForce(m_actuator_id, link_force);
 }

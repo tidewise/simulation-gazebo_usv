@@ -24,7 +24,7 @@ namespace gazebo_usv {
 
         void load(
             Actuators& actuators, gazebo::transport::NodePtr node,
-            gazebo::physics::ModelPtr model, sdf::ElementPtr pluginElement
+            gazebo::physics::ModelPtr model, sdf::ElementPtr plugin_element
         );
         void update(Actuators& actuators);
 
@@ -34,15 +34,15 @@ namespace gazebo_usv {
         typedef const boost::shared_ptr<const gazebo_thruster::msgs::Thrusters>
             ThrustersMSG;
 
-        void processThrusterCommand(ThrustersMSG const& thrustersMSG);
+        void processThrusterCommand(ThrustersMSG const& thrusters_msg);
 
-        std::vector<Thruster> mDefinitions;
+        std::vector<Thruster> m_definitions;
 
-        gazebo::physics::ModelPtr mModel;
-        gazebo::transport::SubscriberPtr mCommandSubscriber;
+        gazebo::physics::ModelPtr m_model;
+        gazebo::transport::SubscriberPtr m_command_subscriber;
 
         std::vector<Thruster> loadThrusters(
-            Actuators& actuators, sdf::ElementPtr pluginElement
+            Actuators& actuators, sdf::ElementPtr plugin_element
         );
 
         /** Apply the min/max thrust to thruster effort

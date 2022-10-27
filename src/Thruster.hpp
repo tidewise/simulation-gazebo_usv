@@ -17,10 +17,10 @@ namespace gazebo_usv {
 
     private:
         std::string name;
-        size_t actuatorID;
+        size_t actuator_id;
         gazebo::physics::LinkPtr link;
-        double minThrust;
-        double maxThrust;
+        double min_thrust;
+        double max_thrust;
         double effort;
     };
 }

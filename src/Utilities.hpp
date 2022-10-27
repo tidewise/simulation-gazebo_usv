@@ -3,6 +3,7 @@
 
 #include <sdf/sdf.hh>
 #include <gazebo/common/Console.hh>
+#include <gazebo/physics/physics.hh>
 
 namespace gazebo_usv {
     namespace utilities {
@@ -28,7 +29,7 @@ namespace gazebo_usv {
          * @see getPluginElement
          */
         sdf::ElementPtr findPluginElementByName(sdf::ElementPtr enclosing,
-                                                std::string const& pluginName);
+                                                std::string const& plugin_name);
 
         /** Resolves for a <plugin> element
          *
@@ -52,7 +53,7 @@ namespace gazebo_usv {
          * @see findPluginElement
          */
         sdf::ElementPtr getPluginElementByName(sdf::ElementPtr enclosing,
-                                         std::string const& pluginName);
+                                         std::string const& plugin_name);
 
 
         /** Get a typed parameter from the given element
@@ -60,10 +61,10 @@ namespace gazebo_usv {
          * If the parameter does not exist, use a default value
          */
         template <class T>
-        T getParameter(std::string pluginName,
+        T getParameter(std::string plugin_name,
                        sdf::ElementPtr element, std::string parameter_name,
                        std::string dimension, T default_value) {
-            gzmsg << pluginName << ": " << parameter_name;
+            gzmsg << plugin_name << ": " << parameter_name;
             if (element->HasElement(parameter_name.c_str())) {
                 T var = element->Get<T>(parameter_name.c_str());
                 gzmsg << "=" << var << " " << dimension  << std::endl;
@@ -74,6 +75,19 @@ namespace gazebo_usv {
                 return default_value;
             }
         }
+
+        /** Get a topic name from the given plugin name
+         *
+         * This method substitues '__' in the plugin name for the '/' in the topic name
+         */
+        std::string getNamespaceFromPluginName(std::string const& plugin_name);
+
+        /** Get a link from the given link name
+         *
+         * This method iteratively checks if there is a model inside model, so the link can be appropriately named
+         */
+        gazebo::physics::LinkPtr getLinkFromName(gazebo::physics::ModelPtr model, std::string const& link_name, std::string const& plugin_name);
+
     }
 
 }

@@ -7,20 +7,21 @@
 #include <gazebo/physics/World.hh>
 
 #include <gazebo_usv/Actuators.hpp>
+#include "Utilities.hpp"
 
 using namespace gazebo_usv;
 
 DirectForceApplication::~DirectForceApplication() {
-    if (mCommandSubscriber) {
-        mCommandSubscriber->Unsubscribe();
+    if (m_command_subscriber) {
+        m_command_subscriber->Unsubscribe();
     }
 }
 
 void DirectForceApplication::load(
     Actuators& actuators, gazebo::physics::ModelPtr model,
-    gazebo::transport::NodePtr node, sdf::ElementPtr pluginElement
+    gazebo::transport::NodePtr node, sdf::ElementPtr plugin_element
 ) {
-    auto link_name = pluginElement->Get<std::string>("link");
+    auto link_name = plugin_element->Get<std::string>("link");
 
     if (link_name.empty()) {
         std::string msg = "DirectForceApplication: sdf model loads 'gazebo_usv_force' plugin,\n"
@@ -30,36 +31,37 @@ void DirectForceApplication::load(
         gzthrow(msg);
     }
 
-    auto link = model->GetLink(link_name);
+    auto link = utilities::getLinkFromName(model,link_name,plugin_element->Get<std::string>("name"));
     if (!link) {
         std::string msg = "DirectForceApplication: sdf model loads 'direct_force' plugin,\n"
-                          "but it's defining an invalid link name as parameter. Please make sure\n"
+                          "but it's defining an invalid link name, " + link_name + ", as parameter. Please make sure\n"
                           "that the link you're naming actually exists in the model's sdf.";
         gzthrow(msg);
     }
 
-    mLinkId = actuators.addLink(link);
+    m_link_id = actuators.addLink(link);
 
     // Initialize communication node and subscribe to gazebo topic
-    std::string topicName = model->GetName() + "/" + link->GetName() + "/gazebo_usv_force";
-    if (mCommandSubscriber) {
-        mCommandSubscriber->Unsubscribe();
+    auto plugin_name = plugin_element->Get<std::string>("name");
+    std::string topic_name = utilities::getNamespaceFromPluginName(plugin_name) + "/" + link->GetName() + "/gazebo_usv_force";
+    if (m_command_subscriber) {
+        m_command_subscriber->Unsubscribe();
     }
-    mCommandSubscriber =
-        node->Subscribe("~/" + topicName, &DirectForceApplication::processDirectionalForceCommand, this);
+    m_command_subscriber =
+        node->Subscribe("/" + topic_name, &DirectForceApplication::processDirectionalForceCommand, this);
 
-    auto worldName = model->GetWorld()->Name();
-    gzmsg << "DirectForceApplication: receiving directioned force commands from /gazebo/"
-          << worldName << "/" << model->GetName() << "/" << link->GetName() << "/gazebo_usv_force" << std::endl;
+    auto world_name = model->GetWorld()->Name();
+    gzmsg << "DirectForceApplication: receiving directioned force commands from /"
+          << topic_name << std::endl;
 }
 
 void DirectForceApplication::processDirectionalForceCommand(ConstVector3dPtr const& force_msg) {
-    mForceCmd.X() = force_msg->has_x() ? force_msg->x() : 0.;
-    mForceCmd.Y() = force_msg->has_y() ? force_msg->y() : 0.;
-    mForceCmd.Z() = force_msg->has_z() ? force_msg->z() : 0.;
+    m_force_cmd.X() = force_msg->has_x() ? force_msg->x() : 0.;
+    m_force_cmd.Y() = force_msg->has_y() ? force_msg->y() : 0.;
+    m_force_cmd.Z() = force_msg->has_z() ? force_msg->z() : 0.;
 }
 
 void DirectForceApplication::update(Actuators& actuators) {
-    actuators.applyForce(mLinkId, mForceCmd);
+    actuators.applyForce(m_link_id, m_force_cmd);
 }
 

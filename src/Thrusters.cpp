@@ -9,33 +9,35 @@ using namespace gazebo_usv;
 using namespace ignition::math;
 
 Thrusters::~Thrusters() {
-    if (mCommandSubscriber) {
-        mCommandSubscriber->Unsubscribe();
+    if (m_command_subscriber) {
+        m_command_subscriber->Unsubscribe();
     }
 }
 
 void Thrusters::load(
     Actuators& actuators, transport::NodePtr node,
-    physics::ModelPtr model, sdf::ElementPtr pluginElement
+    physics::ModelPtr model, sdf::ElementPtr plugin_element
 ) {
-    mModel = model;
-    mDefinitions = loadThrusters(actuators, pluginElement);
+    m_model = model;
+    m_definitions = loadThrusters(actuators, plugin_element);
 
     // Initialize communication node and subscribe to gazebo topic
-    string topicName = mModel->GetName() + "/thrusters";
-    if (mCommandSubscriber) {
-        mCommandSubscriber->Unsubscribe();
-    }
-    mCommandSubscriber =
-        node->Subscribe("~/" + topicName, &Thrusters::processThrusterCommand, this);
+    auto plugin_name = plugin_element->Get<std::string>("name");
+    string topic_name = utilities::getNamespaceFromPluginName(plugin_name) + "/thrusters";
 
-    auto worldName = GzGet((*mModel->GetWorld()), Name, ());
-    gzmsg << "Thruster: receiving thruster commands from /gazebo/"
-          << worldName << "/" << topicName << endl;
+    if (m_command_subscriber) {
+        m_command_subscriber->Unsubscribe();
+    }
+    m_command_subscriber =
+        node->Subscribe("/" + topic_name, &Thrusters::processThrusterCommand, this);
+
+    auto world_name = GzGet((*m_model->GetWorld()), Name, ());
+    gzmsg << "Thruster: receiving thruster commands from /"
+          << topic_name << endl;
 }
 
 Thruster& Thrusters::getThrusterByName(std::string const& name) {
-    for (auto& thruster : mDefinitions) {
+    for (auto& thruster : m_definitions) {
         if (thruster.getLinkName() == name) {
             return thruster;
         }
@@ -44,26 +46,26 @@ Thruster& Thrusters::getThrusterByName(std::string const& name) {
 }
 
 std::vector<Thruster> Thrusters::loadThrusters(
-    Actuators& actuators, sdf::ElementPtr pluginElement
+    Actuators& actuators, sdf::ElementPtr plugin_element
 ) {
     std::vector<Thruster> definitions;
-    sdf::ElementPtr el = pluginElement->GetElement("thruster");
+    sdf::ElementPtr el = plugin_element->GetElement("thruster");
     while (el) {
         // Load thrusters attributes
         Thruster def;
         def.name = el->Get<string>("name");
-        auto link = mModel->GetLink(def.name);
+        auto link = utilities::getLinkFromName(m_model,def.name,plugin_element->Get<std::string>("name"));
         if (!link) {
             gzthrow("Thruster: thruster " + def.name + " does not exist");
         }
 
         gzmsg << "Thruster: thruster name: " << def.name << endl;
-        def.actuatorID = actuators.addLink(link);
+        def.actuator_id = actuators.addLink(link);
         def.link = link;
-        def.minThrust = utilities::getParameter<double>(
+        def.min_thrust = utilities::getParameter<double>(
             "Thruster", el, "min_thrust", "N", -200
         );
-        def.maxThrust = utilities::getParameter<double>(
+        def.max_thrust = utilities::getParameter<double>(
             "Thruster", el, "max_thrust", "N", 200
         );
         def.effort = 0.0;
@@ -82,46 +84,46 @@ std::vector<Thruster> Thrusters::loadThrusters(
     return definitions;
 }
 
-void Thrusters::processThrusterCommand(ThrustersMSG const& thrustersMSG) {
-    for (int i = 0; i < thrustersMSG->thrusters_size(); ++i) {
-        bool thrusterFound = false;
-        const gazebo_thruster::msgs::Thruster& thrusterCMD = thrustersMSG->thrusters(i);
-        for (auto& thruster : mDefinitions) {
-            if (thrusterCMD.name() == thruster.name) {
-                thrusterFound = true;
-                thruster.effort = thrusterCMD.has_effort() ? thrusterCMD.effort() : 0;
+void Thrusters::processThrusterCommand(ThrustersMSG const& thrusters_msg) {
+    for (int i = 0; i < thrusters_msg->thrusters_size(); ++i) {
+        bool thruster_found = false;
+        const gazebo_thruster::msgs::Thruster& thruster_cmd = thrusters_msg->thrusters(i);
+        for (auto& thruster : m_definitions) {
+            if (thruster_cmd.name() == thruster.name) {
+                thruster_found = true;
+                thruster.effort = thruster_cmd.has_effort() ? thruster_cmd.effort() : 0;
                 clampThrustEffort(thruster);
             }
         }
-        if (!thrusterFound) {
+        if (!thruster_found) {
             gzthrow("Thruster: incoming thruster name: "
-                    + thrusterCMD.name() + ", not found.");
+                    + thruster_cmd.name() + ", not found.");
         }
     }
 }
 
 void Thrusters::clampThrustEffort(Thruster& thruster)
 {
-    if (thruster.effort < thruster.minThrust) {
+    if (thruster.effort < thruster.min_thrust) {
         gzmsg << "Thruster: thruster effort " << thruster.effort
               << " below the minimum\n"
-              << "Thruster: using minThrust: " << thruster.minThrust
+              << "Thruster: using min_thrust: " << thruster.min_thrust
               << " instead" << endl;
-        thruster.effort = thruster.minThrust;
+        thruster.effort = thruster.min_thrust;
     }
-    else if (thruster.effort > thruster.maxThrust)
+    else if (thruster.effort > thruster.max_thrust)
     {
         gzmsg << "Thruster: thruster effort " << thruster.effort
               << " above the maximum\n"
-              << "Thruster: using maxThrust: " << thruster.maxThrust
+              << "Thruster: using max_thrust: " << thruster.max_thrust
               << " instead" << endl;
-        thruster.effort = thruster.maxThrust;
+        thruster.effort = thruster.max_thrust;
     }
 }
 
 void Thrusters::update(Actuators& actuators) {
-    for (auto& thruster : mDefinitions) {
+    for (auto& thruster : m_definitions) {
         auto thrust = Vector3d::UnitX * thruster.effort;
-        actuators.applyForce(thruster.actuatorID, thrust);
+        actuators.applyForce(thruster.actuator_id, thrust);
     }
 }
