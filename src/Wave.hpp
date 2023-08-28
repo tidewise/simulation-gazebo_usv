@@ -17,14 +17,14 @@ namespace gazebo_usv {
     public:
         // Wave force and torque
         struct Effects {
-            ignition::math::Vector3d force;
-            ignition::math::Vector3d torque;
+            ignition::math::Vector3d force = ignition::math::Vector3d::Zero;
+            ignition::math::Vector3d torque = ignition::math::Vector3d::Zero;
         };
         // Wave phases to be defined
-        double m_phase_x;
-        double m_phase_y;
-        double m_phase_z;
-        double m_phase_n;
+        double m_phase_x = 0;
+        double m_phase_y = 0;
+        double m_phase_z = 0;
+        double m_phase_n = 0;
 
         Wave() = default;
         ~Wave();
@@ -74,10 +74,10 @@ namespace gazebo_usv {
         SubscriberPtr m_wave_frequency_subscriber;
         SubscriberPtr m_roll_subscriber;
 
-        ignition::math::Vector3d m_wave_amplitude{};
-        ignition::math::Vector3d m_wave_frequency{};
-        double m_roll_amplitude;
-        double m_roll_frequency;
+        ignition::math::Vector3d m_wave_amplitude = ignition::math::Vector3d::Zero;
+        ignition::math::Vector3d m_wave_frequency = ignition::math::Vector3d::Zero;
+        double m_roll_amplitude = 0;
+        double m_roll_frequency = 0;
 
         /**
          * @brief Get the reference link where force and torque will be applied
