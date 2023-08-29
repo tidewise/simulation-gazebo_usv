@@ -19,17 +19,17 @@ namespace gazebo_usv
         // Parameters used to calculate the wind effects 
         struct EffectParameters
         {
-            double frontal_area;
-            double lateral_area;
-            double length_overall;
-            double air_density;
-            ignition::math::Vector3d coefficients;
+            double frontal_area = 0;
+            double lateral_area = 0;
+            double length_overall = 0;
+            double air_density = 0;
+            ignition::math::Vector3d coefficients = ignition::math::Vector3d::Zero;
         };
         // Wind force and torque
         struct Effects
         {
-            ignition::math::Vector3d force;
-            ignition::math::Vector3d torque;
+            ignition::math::Vector3d force = ignition::math::Vector3d::Zero;
+            ignition::math::Vector3d torque = ignition::math::Vector3d::Zero;
         };
 
         Wind() = default;
@@ -80,7 +80,7 @@ namespace gazebo_usv
         SubscriberPtr m_wind_velocity_subscriber;
 
         EffectParameters m_parameters;
-        ignition::math::Vector3d m_wind_velocity{};
+        ignition::math::Vector3d m_wind_velocity = ignition::math::Vector3d::Zero;
 
         /**
          * @brief Get the reference link where force and torque will be applied
