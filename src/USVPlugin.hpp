@@ -35,11 +35,11 @@ namespace gazebo_usv {
 
         void updateBegin(gazebo::common::UpdateInfo const& info);
 
-        std::vector<Rudder> loadRudders(sdf::ElementPtr plugin_element);
-        Thrusters* loadThrusters(sdf::ElementPtr plugin_element);
-        Wind* loadWindParameters(sdf::ElementPtr plugin_element);
-        Wave* loadWaveParameters(sdf::ElementPtr plugin_element);
-        DirectForceApplication* loadDirectForceApplicationParameters(sdf::ElementPtr plugin_element);
+        std::vector<Rudder> loadRudders(sdf::ElementPtr plugin_sdf);
+        Thrusters* loadThrusters(sdf::ElementPtr plugin_sdf);
+        Wind* loadWindParameters(sdf::ElementPtr plugin_sdf);
+        Wave* loadWaveParameters(sdf::ElementPtr plugin_sdf);
+        DirectForceApplication* loadDirectForceApplicationParameters(sdf::ElementPtr plugin_sdf);
     };
 }
 

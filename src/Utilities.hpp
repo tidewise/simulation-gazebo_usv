@@ -76,20 +76,44 @@ namespace gazebo_usv {
             }
         }
 
-        /** Get a topic name from the given plugin name
-         *
-         * This method substitues '__' in the plugin name for the '/' in the topic name
+        /** Get a topic name for the given plugin
          */
-        std::string getNamespaceFromPluginName(std::string const& plugin_name);
+        std::string computeTopicScope(
+            gazebo::physics::ModelPtr model,
+            sdf::ElementPtr plugin
+        );
 
-        /** Get a link from the given link name
+        /** Compute the actual name of a link based on a relative link name from the SDF
          *
-         * This method iteratively checks if there is a model inside model, so the link can be appropriately named
+         * To account for model inclusions, a plugin in an included model that has to
+         * resolve a link name will have to prepend the path between the root model
+         * and the parent model of the plugin.
+         *
+         * This method assumes that the plugin name has been re-scoped that way, i.e.
+         * that the relative path to the root is simply everything before :: in
+         * the plugin name
          */
-        gazebo::physics::LinkPtr getLinkFromName(gazebo::physics::ModelPtr model, std::string const& link_name, std::string const& plugin_name);
+        gazebo::physics::LinkPtr resolveLink(
+            gazebo::physics::ModelPtr model,
+            sdf::ElementPtr plugin,
+            std::string const& link_name
+        );
 
+        /** Resolve a link from name if an attribute provides it, or return the first link
+         * of the model
+         *
+         * @param model the reference gazebo model. If no link is defined in the plugin
+         *    description, its first link is returned instead.
+         * @param plugin the plugin SDF definition
+         * @param element_name the name of the element that contains the link name. If
+         *    it not present, the function will return the first link of the model.
+         */
+        gazebo::physics::LinkPtr resolveLinkWithDefault(
+            gazebo::physics::ModelPtr model,
+            sdf::ElementPtr plugin_sdf,
+            std::string const& element_name
+        );
     }
-
 }
 
 #endif

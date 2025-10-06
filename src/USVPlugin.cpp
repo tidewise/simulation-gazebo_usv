@@ -12,7 +12,7 @@ USVPlugin::~USVPlugin() {
     delete m_direct_force;
 }
 
-void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _plugin_sdf)
+void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr plugin_sdf)
 {
     m_model = _model;
 
@@ -25,19 +25,19 @@ void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _plugin_sdf)
         boost::bind(&USVPlugin::updateBegin, this, _1)
     );
 
-    auto plugin_name = _plugin_sdf->Get<std::string>("name");
+    auto plugin_name = plugin_sdf->Get<std::string>("name");
     if (plugin_name.find("thrusters") != std::string::npos) {
-        m_thrusters = loadThrusters(_plugin_sdf);
-        m_rudders = loadRudders(_plugin_sdf);
+        m_thrusters = loadThrusters(plugin_sdf);
+        m_rudders = loadRudders(plugin_sdf);
     }
     else if (plugin_name.find("wind_dynamics") != std::string::npos) {
-        m_wind = loadWindParameters(_plugin_sdf);
+        m_wind = loadWindParameters(plugin_sdf);
     }
     else if (plugin_name.find("wave_dynamics") != std::string::npos) {
-        m_wave = loadWaveParameters(_plugin_sdf);
+        m_wave = loadWaveParameters(plugin_sdf);
     }
     else if (plugin_name.find("direct_force") != std::string::npos) {
-        m_direct_force = loadDirectForceApplicationParameters(_plugin_sdf);
+        m_direct_force = loadDirectForceApplicationParameters(plugin_sdf);
     }
 }
 
@@ -54,64 +54,61 @@ Thruster& USVPlugin::getThrusterByName(std::string const& name) {
     return m_thrusters->getThrusterByName(name);
 }
 
-std::vector<Rudder> USVPlugin::loadRudders(sdf::ElementPtr thrusters_plugin_element) {
-    if (!thrusters_plugin_element || !thrusters_plugin_element->HasElement("rudder")) {
+std::vector<Rudder> USVPlugin::loadRudders(sdf::ElementPtr plugin_sdf) {
+    if (!plugin_sdf || !plugin_sdf->HasElement("rudder")) {
         return {};
     }
 
     std::vector<Rudder> rudders;
 
-    sdf::ElementPtr el = thrusters_plugin_element->GetElement("rudder");
-    std::string plugin_name = thrusters_plugin_element->Get<string>("name");
+    sdf::ElementPtr el = plugin_sdf->GetElement("rudder");
     while (el) {
-        rudders.push_back(Rudder(*this, *m_actuators, m_model, el, plugin_name));
+        rudders.push_back(Rudder(*this, *m_actuators, m_model, el));
         el = el->GetNextElement("rudder");
     }
 
     return rudders;
 }
 
-Thrusters* USVPlugin::loadThrusters(sdf::ElementPtr thrusters_plugin_element) {
-    if (!thrusters_plugin_element || !thrusters_plugin_element->HasElement("thruster")) {
+Thrusters* USVPlugin::loadThrusters(sdf::ElementPtr plugin_sdf) {
+    if (!plugin_sdf || !plugin_sdf->HasElement("thruster")) {
         return nullptr;
     }
 
     Thrusters* thrusters = new Thrusters;
-    thrusters->load(*m_actuators, m_node, m_model, thrusters_plugin_element);
+    thrusters->load(*m_actuators, m_node, m_model, plugin_sdf);
     return thrusters;
 }
 
-Wind* USVPlugin::loadWindParameters(sdf::ElementPtr wind_plugin_element) {
-    if (!wind_plugin_element) {
+Wind* USVPlugin::loadWindParameters(sdf::ElementPtr plugin_sdf) {
+    if (!plugin_sdf) {
         return nullptr;
     }
 
     Wind* wind = new Wind;
-    wind->load(m_model, m_node, wind_plugin_element);
-
+    wind->load(m_model, m_node, plugin_sdf);
     return wind;
 }
 
-Wave* USVPlugin::loadWaveParameters(sdf::ElementPtr wave_plugin_element) {
-    if (!wave_plugin_element) {
+Wave* USVPlugin::loadWaveParameters(sdf::ElementPtr plugin_sdf) {
+    if (!plugin_sdf) {
         return nullptr;
     }
 
     Wave* wave = new Wave;
-    wave->load(m_model, m_node, wave_plugin_element);
-
+    wave->load(m_model, m_node, plugin_sdf);
     return wave;
 }
 
 DirectForceApplication* USVPlugin::loadDirectForceApplicationParameters(
-    sdf::ElementPtr direct_force_plugin_element)
+    sdf::ElementPtr plugin_sdf)
 {
-    if (!direct_force_plugin_element) {
+    if (!plugin_sdf) {
         return nullptr;
     }
 
     DirectForceApplication* direct_force = new DirectForceApplication;
-    direct_force->load(*m_actuators, m_model, m_node, direct_force_plugin_element);
+    direct_force->load(*m_actuators, m_model, m_node, plugin_sdf);
 
     return direct_force;
 }

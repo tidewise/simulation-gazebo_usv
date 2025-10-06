@@ -16,49 +16,22 @@ Wind::~Wind()
     }
 }
 
-void Wind::load(ModelPtr const _model, transport::NodePtr const _node, sdf::ElementPtr const _sdf)
+void Wind::load(ModelPtr const model, transport::NodePtr const node, sdf::ElementPtr const plugin_sdf)
 {
-    m_model = _model;
-    m_node = _node;
-    m_link = getReferenceLink(m_model, _sdf);
+    m_model = model;
+    m_node = node;
+    m_link = utilities::resolveLinkWithDefault(model, plugin_sdf, "link_name");
+    gzmsg << "Wind: applying to link " << m_link->GetScopedName() << endl;
 
-    auto pluginName = _sdf->Get<std::string>("name");
-    string topicName = utilities::getNamespaceFromPluginName(pluginName) + "/wind_velocity";
+    string topicName = utilities::computeTopicScope(model, plugin_sdf) + "/wind_velocity";
     if (m_wind_velocity_subscriber)
     {
         m_wind_velocity_subscriber->Unsubscribe();
     }
-    m_wind_velocity_subscriber = m_node->Subscribe("/" + topicName, &Wind::readWindVelocity, this);
-    auto worldName = m_model->GetWorld()->Name();
-    gzmsg << "Wind: receiving wind commands from /"
-          << topicName << endl;
+    m_wind_velocity_subscriber = m_node->Subscribe(topicName, &Wind::readWindVelocity, this);
+    gzmsg << "Wind: receiving wind commands from " << topicName << endl;
 
-    m_parameters = loadParameters(_sdf);
-}
-
-physics::LinkPtr Wind::getReferenceLink(physics::ModelPtr const _model, sdf::ElementPtr const _sdf) const
-{
-    if (_sdf->HasElement("link_name"))
-    {
-        physics::LinkPtr link = _model->GetLink(_sdf->Get<string>("link_name"));
-        if (!link)
-        {
-            string msg = "Wind: link " + _sdf->Get<string>("link_name") + " not found in model " + _model->GetName();
-            gzthrow(msg.c_str());
-        }
-        gzmsg << "Wind: reference link: " << link->GetName() << endl;
-        return link;
-    }
-    else if (_model->GetLinks().empty())
-    {
-        gzthrow("Wind: no link was defined in model!");
-    }
-    else
-    {
-        physics::LinkPtr link = _model->GetLinks().front();
-        gzmsg << "Wind: reference link not defined, using " << link->GetName() << " instead!" << endl;
-        return link;
-    }
+    m_parameters = loadParameters(plugin_sdf);
 }
 
 Wind::EffectParameters Wind::loadParameters(sdf::ElementPtr el) const
@@ -106,7 +79,7 @@ Wind::Effects Wind::computeEffects(Quaterniond const body2world_orientation, Vec
 
 void Wind::update()
 {
-    // Compute the new force and torque for this timestep 
+    // Compute the new force and torque for this timestep
     Effects effects = computeEffects(m_model->WorldPose().Rot(), m_model->WorldLinearVel(), m_wind_velocity);
 
     // Apply force and torque

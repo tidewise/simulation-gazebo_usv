@@ -22,9 +22,13 @@ namespace gazebo_usv {
         Thrusters(Thrusters const&) = delete;
         ~Thrusters();
 
+        /**
+         * @param plugin_sdf the SDF element of the <plugin ...> tag that contains
+         *    thrusters
+         */
         void load(
             Actuators& actuators, gazebo::transport::NodePtr node,
-            gazebo::physics::ModelPtr model, sdf::ElementPtr plugin_element
+            gazebo::physics::ModelPtr model, sdf::ElementPtr plugin_sdf
         );
         void update(Actuators& actuators);
 
@@ -41,8 +45,12 @@ namespace gazebo_usv {
         gazebo::physics::ModelPtr m_model;
         gazebo::transport::SubscriberPtr m_command_subscriber;
 
+        /**
+         * @param plugin_sdf the SDF element of the <plugin ...> tag that contains
+         *    thrusters
+         */
         std::vector<Thruster> loadThrusters(
-            Actuators& actuators, sdf::ElementPtr plugin_element
+            Actuators& actuators, sdf::ElementPtr plugin_sdf
         );
 
         /** Apply the min/max thrust to thruster effort

@@ -65,20 +65,52 @@ sdf::ElementPtr utilities::getPluginElementByName(sdf::ElementPtr enclosing,
     return element;
 }
 
-std::string utilities::getNamespaceFromPluginName(std::string const& plugin_name)
+std::string utilities::computeTopicScope(
+    gazebo::physics::ModelPtr model,
+    sdf::ElementPtr plugin)
 {
-    return std::regex_replace(plugin_name, std::regex("__"), "/");
+    std::string full_gazebo_name =
+        "gazebo::" + model->GetScopedName(true) + "::" + plugin->Get<std::string>("name");
+    return "/" + std::regex_replace(full_gazebo_name, std::regex("::"), "/");
 }
-gazebo::physics::LinkPtr utilities::getLinkFromName(gazebo::physics::ModelPtr model,
-    std::string const& link_name,
-    std::string const& plugin_name)
-{
-    std::string scope = plugin_name.substr(0, plugin_name.rfind("__"));
-    std::string model_name = model->GetName();
-    std::string scope_relative_2_model = scope.substr(scope.find(model_name));
-    // Correct the separators to match the link name
-    std::string relative_scope_corrected =
-        std::regex_replace(scope_relative_2_model, std::regex("__"), "::");
 
-    return model->GetLink(relative_scope_corrected + "::" + link_name);
+gazebo::physics::LinkPtr utilities::resolveLink(
+    gazebo::physics::ModelPtr model,
+    sdf::ElementPtr plugin,
+    std::string const& link_name)
+{
+    std::string scope = plugin_name.substr(0, plugin_name.rfind("::"));
+    std::string full_link_name = scope + "::" + link_name;
+    std::string plugin_name = plugin->Get<std::string>("name");
+    auto link = model->GetLink(full_link_name);
+    if (!link) {
+        std::string msg =
+            "could not find link " + link_name + " specified in plugin " +
+            plugin_name + " (full link name resolved to " + full_link_name + ")";
+        gzthrow(msg);
+    }
+    return link;
+}
+
+gazebo::physics::LinkPtr utilities::resolveLinkWithDefault(
+    gazebo::physics::ModelPtr model,
+    sdf::ElementPtr plugin_sdf,
+    std::string const& element_name
+) {
+    if (plugin_sdf->HasElement(element_name))
+    {
+        auto link_name = plugin_sdf->Get<std::string>(element_name);
+        return utilities::resolveLink(model, plugin_sdf, link_name);
+    }
+    else if (model->GetLinks().empty())
+    {
+        gzthrow("No link defined in reference model, and no " + element_name + " element found plugin");
+    }
+    else
+    {
+        auto link = model->GetLinks().front();
+        gzmsg << "Element " << element_name << " missing in plugin definition, using "
+              << link->GetScopedName() << " instead!" << std::endl;
+        return link;
+    }
 }
