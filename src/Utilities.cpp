@@ -103,6 +103,25 @@ static std::string resolveLinkScopeFromDoubleUndescoredPluginName(
     return std::regex_replace(relative_scope, std::regex("__"), "::");
 }
 
+static std::string resolvePluginParentScope(
+    gazebo::physics::ModelPtr model, std::string const& plugin_name
+) {
+    if (plugin_name.find("__") != std::string::npos) {
+        return resolveLinkScopeFromDoubleUndescoredPluginName(model, plugin_name);
+    }
+    else {
+        return plugin_name.substr(0, plugin_name.rfind("::"));
+    }
+}
+
+static std::string applyScope(std::string const& scope, std::string const& name) {
+    if (scope.empty()) {
+        return name;
+    } else {
+        return scope + "::" + name;
+    }
+}
+
 gazebo::physics::LinkPtr utilities::resolveLink(
     gazebo::physics::ModelPtr model,
     sdf::ElementPtr plugin,
@@ -110,20 +129,8 @@ gazebo::physics::LinkPtr utilities::resolveLink(
 {
     std::string plugin_name = plugin->Get<std::string>("name");
 
-    std::string scope;
-    if (plugin_name.find("__") != std::string::npos) {
-        scope = resolveLinkScopeFromDoubleUndescoredPluginName(model, plugin_name);
-    }
-    else {
-        scope = plugin_name.substr(0, plugin_name.rfind("::"));
-    }
-
-    std::string full_link_name;
-    if (scope.empty()) {
-        full_link_name = link_name;
-    } else {
-        full_link_name = scope + "::" + link_name;
-    }
+    auto scope = resolvePluginParentScope(model, plugin_name);
+    auto full_link_name = applyScope(scope, link_name);
 
     auto link = model->GetLink(full_link_name);
     if (!link) {
@@ -151,9 +158,28 @@ gazebo::physics::LinkPtr utilities::resolveLinkWithDefault(
     }
     else
     {
-        auto link = model->GetLinks().front();
-        gzmsg << "Element " << element_name << " missing in plugin definition, using "
-              << link->GetScopedName() << " instead!" << std::endl;
-        return link;
+        auto plugin_name = plugin_sdf->Get<std::string>("name");
+        auto scope = resolvePluginParentScope(model, plugin_name);
+        auto it = std::find_if(
+            model->GetLinks().begin(),
+            model->GetLinks().end(),
+            [&](auto link_ptr) -> bool {
+                auto s = link_ptr->GetName();
+                return s.substr(0, scope.size()) == scope;
+            }
+        );
+
+        if (it == model->GetLinks().end()) {
+            gzthrow(
+                "Element " + element_name + " missing in plugin definition, attempted "
+                "to find a link whose scoped name starts with " + scope + " but found "
+                "none"
+            );
+        }
+
+        gzmsg <<
+            "Element " << element_name << " missing in plugin definition, picking first "
+            "link of the enclosing model, " << (*it)->GetScopedName() << std::endl;
+        return *it;
     }
 }
