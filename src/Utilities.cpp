@@ -69,9 +69,38 @@ std::string utilities::computeTopicScope(
     gazebo::physics::ModelPtr model,
     sdf::ElementPtr plugin)
 {
-    std::string full_gazebo_name =
-        "gazebo::" + model->GetScopedName(true) + "::" + plugin->Get<std::string>("name");
-    return "/" + std::regex_replace(full_gazebo_name, std::regex("::"), "/");
+    std::string plugin_name = plugin->Get<std::string>("name");
+    if (plugin_name.find("__") != std::string::npos) {
+        return "/" + std::regex_replace(plugin_name, std::regex("__"), "/");
+    }
+    else {
+        std::string full_gazebo_name =
+            "gazebo::" + model->GetScopedName(true) + "::" + plugin_name;
+        return "/" + std::regex_replace(full_gazebo_name, std::regex("::"), "/");
+    }
+}
+
+static std::string resolveLinkScopeFromDoubleUndescoredPluginName(
+    gazebo::physics::ModelPtr model,
+    std::string const& plugin_name
+) {
+    // Do slightly better than the actual old implementation, and validate that
+    // the beginning of the full path is the fully scoped model name
+    auto expected_prefix_gazebo = "gazebo::" + model->GetScopedName(true);
+    auto expected_prefix = std::regex_replace(expected_prefix_gazebo, std::regex("::"), "__");
+    if (plugin_name.substr(0, expected_prefix.size()) != expected_prefix) {
+        gzthrow("expected " + plugin_name + " to start with " + expected_prefix);
+    }
+
+    auto rfind = plugin_name.rfind("__");
+    if (rfind == expected_prefix.size()) {
+        return "";
+    }
+    auto relative_scope = plugin_name.substr(
+        expected_prefix.size() + 2, rfind - expected_prefix.size() - 2
+    );
+
+    return std::regex_replace(relative_scope, std::regex("__"), "::");
 }
 
 gazebo::physics::LinkPtr utilities::resolveLink(
@@ -79,9 +108,23 @@ gazebo::physics::LinkPtr utilities::resolveLink(
     sdf::ElementPtr plugin,
     std::string const& link_name)
 {
-    std::string scope = plugin_name.substr(0, plugin_name.rfind("::"));
-    std::string full_link_name = scope + "::" + link_name;
     std::string plugin_name = plugin->Get<std::string>("name");
+
+    std::string scope;
+    if (plugin_name.find("__") != std::string::npos) {
+        scope = resolveLinkScopeFromDoubleUndescoredPluginName(model, plugin_name);
+    }
+    else {
+        scope = plugin_name.substr(0, plugin_name.rfind("::"));
+    }
+
+    std::string full_link_name;
+    if (scope.empty()) {
+        full_link_name = link_name;
+    } else {
+        full_link_name = scope + "::" + link_name;
+    }
+
     auto link = model->GetLink(full_link_name);
     if (!link) {
         std::string msg =
