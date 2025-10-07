@@ -10,6 +10,7 @@ Actuators::Actuators(gazebo::physics::ModelPtr model, gazebo::transport::NodePtr
     mCompensatedMassSubscriber = node->Subscribe(
         "~/" + topicName, &Actuators::readCompensatedMass, this, true
     );
+    gzmsg << "USVPlugin: listening for compensated mass matrix on " + topicName << std::endl;
 }
 
 Actuators::~Actuators() {

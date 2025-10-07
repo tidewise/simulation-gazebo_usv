@@ -32,6 +32,7 @@ void DirectForceApplication::load(
     }
 
     auto link = utilities::resolveLink(model, plugin_sdf, link_name);
+    gzmsg << "DirectForceApplication: applying on link " << link->GetScopedName() << std::endl;
     m_link_id = actuators.addLink(link);
 
     // Initialize communication node and subscribe to gazebo topic
@@ -43,7 +44,7 @@ void DirectForceApplication::load(
     m_command_subscriber =
         node->Subscribe(topic_name, &DirectForceApplication::processDirectionalForceCommand, this);
 
-    gzmsg << "DirectForceApplication: receiving directioned force commands from /"
+    gzmsg << "DirectForceApplication: receiving direct force commands from "
           << topic_name << std::endl;
 }
 

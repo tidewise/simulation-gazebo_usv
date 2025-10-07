@@ -29,6 +29,7 @@ void Wave::load(ModelPtr const model,
     m_model = model;
     m_node = node;
     m_link = utilities::resolveLinkWithDefault(m_model, plugin_sdf, "link_name");
+    gzmsg << "Wave: applying to link " << m_link->GetScopedName() << std::endl;
 
     string topicScope = utilities::computeTopicScope(model, plugin_sdf);
 
@@ -53,8 +54,10 @@ void Wave::load(ModelPtr const model,
     m_roll_subscriber = m_node->Subscribe(topicNameRoll, &Wave::readRoll, this);
 
     auto worldName = m_model->GetWorld()->Name();
-    gzmsg << "Wave: receiving wave commands from " << topicNameAmplitude << "and "
-          << topicNameFrequency << endl;
+    gzmsg
+        << "Wave: receiving wave commands from "
+        << topicNameAmplitude << ", " << topicNameFrequency
+        << " and " << topicNameRoll << endl;
 
     std::srand(static_cast<unsigned int>(time(NULL)));
     m_phase_x = M_PI * (double)rand() / RAND_MAX;

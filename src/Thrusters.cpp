@@ -30,9 +30,7 @@ void Thrusters::load(
     m_command_subscriber =
         node->Subscribe(topic_name, &Thrusters::processThrusterCommand, this);
 
-    auto world_name = GzGet((*m_model->GetWorld()), Name, ());
-    gzmsg << "Thruster: receiving thruster commands from /"
-          << topic_name << endl;
+    gzmsg << "Thruster: receiving thruster commands from " << topic_name << endl;
 }
 
 Thruster& Thrusters::getThrusterByName(std::string const& name) {
@@ -56,7 +54,7 @@ std::vector<Thruster> Thrusters::loadThrusters(
 
         auto link = utilities::resolveLink(m_model, plugin_sdf, def.name);
 
-        gzmsg << "Thruster: thruster name: " << def.name << endl;
+        gzmsg << "Thruster: thruster " << def.name << " is link " << link->GetScopedName() << endl;
         def.actuator_id = actuators.addLink(link);
         def.link = link;
         def.min_thrust = utilities::getParameter<double>(

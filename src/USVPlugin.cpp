@@ -14,6 +14,7 @@ USVPlugin::~USVPlugin() {
 
 void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr plugin_sdf)
 {
+    gzmsg << "Loading USVPlugin" << std::endl;
     m_model = _model;
 
     m_node = transport::NodePtr(new transport::Node());

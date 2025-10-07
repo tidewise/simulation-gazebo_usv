@@ -13,6 +13,7 @@ Rudder::Rudder(USVPlugin& plugin, Actuators& actuators, physics::ModelPtr model,
     auto plugin_sdf = rudder_sdf->GetParent();
     m_link_name = rudder_sdf->Get<string>("name");
     m_link = utilities::resolveLink(model, plugin_sdf, m_link_name);
+    gzmsg << "Rudder: resolved rudder link " << m_link->GetScopedName() << std::endl;
 
     auto thruster_name = rudder_sdf->Get<string>("thrusterName");
     if (!thruster_name.empty()) {
