@@ -36,7 +36,7 @@ void DirectForceApplication::load(
     m_link_id = actuators.addLink(link);
 
     // Initialize communication node and subscribe to gazebo topic
-    std::string topic_name = utilities::computeTopicScope(model, plugin_sdf) +
+    std::string topic_name = utilities::computePluginTopicScope(model, plugin_sdf) +
         "/" + link->GetName() + "/gazebo_usv_force";
     if (m_command_subscriber) {
         m_command_subscriber->Unsubscribe();

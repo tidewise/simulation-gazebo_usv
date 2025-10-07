@@ -23,7 +23,7 @@ void Wind::load(ModelPtr const model, transport::NodePtr const node, sdf::Elemen
     m_link = utilities::resolveLinkWithDefault(model, plugin_sdf, "link_name");
     gzmsg << "Wind: applying to link " << m_link->GetScopedName() << endl;
 
-    string topicName = utilities::computeTopicScope(model, plugin_sdf) + "/wind_velocity";
+    string topicName = utilities::computePluginTopicScope(model, plugin_sdf) + "/wind_velocity";
     if (m_wind_velocity_subscriber)
     {
         m_wind_velocity_subscriber->Unsubscribe();

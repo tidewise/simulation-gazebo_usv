@@ -65,7 +65,13 @@ sdf::ElementPtr utilities::getPluginElementByName(sdf::ElementPtr enclosing,
     return element;
 }
 
-std::string utilities::computeTopicScope(
+std::string utilities::computeModelTopicScope(
+    gazebo::physics::ModelPtr model)
+{
+    return "/gazebo/" + std::regex_replace(model->GetScopedName(true), std::regex("::"), "/");
+}
+
+std::string utilities::computePluginTopicScope(
     gazebo::physics::ModelPtr model,
     sdf::ElementPtr plugin)
 {
@@ -150,7 +156,7 @@ gazebo::physics::LinkPtr utilities::resolveLinkWithDefault(
     if (plugin_sdf->HasElement(element_name))
     {
         auto link_name = plugin_sdf->Get<std::string>(element_name);
-        return utilities::resolveLink(model, plugin_sdf, link_name);
+        return resolveLink(model, plugin_sdf, link_name);
     }
     else if (model->GetLinks().empty())
     {

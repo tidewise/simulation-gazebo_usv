@@ -1,4 +1,5 @@
 #include "Actuators.hpp"
+#include "Utilities.hpp"
 #include <gazebo/physics/physics.hh>
 
 using namespace gazebo_usv;
@@ -6,9 +7,9 @@ using namespace std;
 using namespace ignition::math;
 
 Actuators::Actuators(gazebo::physics::ModelPtr model, gazebo::transport::NodePtr node) {
-    string topicName = model->GetName() + "/compensated_mass";
+    string topicName = utilities::computeModelTopicScope(model) + "/compensated_mass";
     mCompensatedMassSubscriber = node->Subscribe(
-        "~/" + topicName, &Actuators::readCompensatedMass, this, true
+        topicName, &Actuators::readCompensatedMass, this, true
     );
     gzmsg << "USVPlugin: listening for compensated mass matrix on " + topicName << std::endl;
 }

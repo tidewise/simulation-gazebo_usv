@@ -76,9 +76,13 @@ namespace gazebo_usv {
             }
         }
 
-        /** Get a topic name for the given plugin
+        /** Get the scope of a topic that is relative to the given model
          */
-        std::string computeTopicScope(
+        std::string computeModelTopicScope(gazebo::physics::ModelPtr model);
+
+        /** Get the scope of a topic that is published by the given plugin
+         */
+        std::string computePluginTopicScope(
             gazebo::physics::ModelPtr model,
             sdf::ElementPtr plugin
         );

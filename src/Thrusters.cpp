@@ -22,7 +22,7 @@ void Thrusters::load(
     m_definitions = loadThrusters(actuators, plugin_sdf);
 
     // Initialize communication node and subscribe to gazebo topic
-    string topic_name = utilities::computeTopicScope(model, plugin_sdf) + "/thrusters";
+    string topic_name = utilities::computePluginTopicScope(model, plugin_sdf) + "/thrusters";
 
     if (m_command_subscriber) {
         m_command_subscriber->Unsubscribe();
