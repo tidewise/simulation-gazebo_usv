@@ -2,7 +2,7 @@
 #include <gazebo_usv/Rudder.hpp>
 #include <gazebo_usv/Thruster.hpp>
 #include <gazebo_usv/USVPlugin.hpp>
-#include <gazebo_usv/Utilities.hpp>
+#include <gazebo_usv/RockGazeboHelpers.hpp>
 
 using namespace std;
 using namespace gazebo;
@@ -12,7 +12,7 @@ using namespace ignition::math;
 Rudder::Rudder(USVPlugin& plugin, Actuators& actuators, physics::ModelPtr model, sdf::ElementPtr rudder_sdf) {
     auto plugin_sdf = rudder_sdf->GetParent();
     m_link_name = rudder_sdf->Get<string>("name");
-    m_link = utilities::resolveLink(model, plugin_sdf, m_link_name);
+    m_link = rock_gazebo_helpers::resolveLink(model, plugin_sdf, m_link_name);
     gzmsg << "Rudder: resolved rudder link " << m_link->GetScopedName() << std::endl;
 
     auto thruster_name = rudder_sdf->Get<string>("thrusterName");

@@ -1,5 +1,5 @@
 #include "Wind.hpp"
-#include "Utilities.hpp"
+#include "RockGazeboHelpers.hpp"
 
 using namespace std;
 using namespace gazebo;
@@ -20,10 +20,10 @@ void Wind::load(ModelPtr const model, transport::NodePtr const node, sdf::Elemen
 {
     m_model = model;
     m_node = node;
-    m_link = utilities::resolveLinkWithDefault(model, plugin_sdf, "link_name");
+    m_link = rock_gazebo_helpers::resolveLinkWithDefault(model, plugin_sdf, "link_name");
     gzmsg << "Wind: applying to link " << m_link->GetScopedName() << endl;
 
-    string topicName = utilities::computePluginTopicScope(model, plugin_sdf) + "/wind_velocity";
+    string topicName = rock_gazebo_helpers::computePluginTopicScope(model, plugin_sdf) + "/wind_velocity";
     if (m_wind_velocity_subscriber)
     {
         m_wind_velocity_subscriber->Unsubscribe();
@@ -39,11 +39,11 @@ Wind::EffectParameters Wind::loadParameters(sdf::ElementPtr el) const
     gzmsg << "Wind: Loading wind effect parameters" << endl;
 
     EffectParameters parameters;
-    parameters.frontal_area = utilities::getParameter<double>("Wind", el, "frontal_area", "m2", 0);
-    parameters.lateral_area = utilities::getParameter<double>("Wind", el, "lateral_area", "m2", 0);
-    parameters.length_overall = utilities::getParameter<double>("Wind", el, "length_overall", "m", 0);
-    parameters.air_density = utilities::getParameter<double>("Wind", el, "air_density", "kg/m3", 1.12);
-    parameters.coefficients = utilities::getParameter<Vector3d>("Wind", el, "wind_coeffs",
+    parameters.frontal_area = rock_gazebo_helpers::getParameter<double>("Wind", el, "frontal_area", "m2", 0);
+    parameters.lateral_area = rock_gazebo_helpers::getParameter<double>("Wind", el, "lateral_area", "m2", 0);
+    parameters.length_overall = rock_gazebo_helpers::getParameter<double>("Wind", el, "length_overall", "m", 0);
+    parameters.air_density = rock_gazebo_helpers::getParameter<double>("Wind", el, "air_density", "kg/m3", 1.12);
+    parameters.coefficients = rock_gazebo_helpers::getParameter<Vector3d>("Wind", el, "wind_coeffs",
                                                                 "", Vector3d(0, 0, 0));
     return parameters;
 }

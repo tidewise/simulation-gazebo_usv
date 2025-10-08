@@ -7,7 +7,7 @@
 #include <gazebo/physics/World.hh>
 
 #include <gazebo_usv/Actuators.hpp>
-#include "Utilities.hpp"
+#include "RockGazeboHelpers.hpp"
 
 using namespace gazebo_usv;
 
@@ -31,12 +31,12 @@ void DirectForceApplication::load(
         gzthrow(msg);
     }
 
-    auto link = utilities::resolveLink(model, plugin_sdf, link_name);
+    auto link = rock_gazebo_helpers::resolveLink(model, plugin_sdf, link_name);
     gzmsg << "DirectForceApplication: applying on link " << link->GetScopedName() << std::endl;
     m_link_id = actuators.addLink(link);
 
     // Initialize communication node and subscribe to gazebo topic
-    std::string topic_name = utilities::computePluginTopicScope(model, plugin_sdf) +
+    std::string topic_name = rock_gazebo_helpers::computePluginTopicScope(model, plugin_sdf) +
         "/" + link->GetName() + "/gazebo_usv_force";
     if (m_command_subscriber) {
         m_command_subscriber->Unsubscribe();

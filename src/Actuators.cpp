@@ -1,5 +1,5 @@
 #include "Actuators.hpp"
-#include "Utilities.hpp"
+#include "RockGazeboHelpers.hpp"
 #include <gazebo/physics/physics.hh>
 
 using namespace gazebo_usv;
@@ -7,7 +7,7 @@ using namespace std;
 using namespace ignition::math;
 
 Actuators::Actuators(gazebo::physics::ModelPtr model, gazebo::transport::NodePtr node) {
-    string topicName = utilities::computeModelTopicScope(model) + "/compensated_mass";
+    string topicName = rock_gazebo_helpers::computeModelTopicScope(model) + "/compensated_mass";
     mCompensatedMassSubscriber = node->Subscribe(
         topicName, &Actuators::readCompensatedMass, this, true
     );

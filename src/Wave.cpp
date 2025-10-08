@@ -1,5 +1,5 @@
 #include "Wave.hpp"
-#include "Utilities.hpp"
+#include "RockGazeboHelpers.hpp"
 #include <cstdlib>
 #include <math.h>
 
@@ -28,10 +28,10 @@ void Wave::load(ModelPtr const model,
 {
     m_model = model;
     m_node = node;
-    m_link = utilities::resolveLinkWithDefault(m_model, plugin_sdf, "link_name");
+    m_link = rock_gazebo_helpers::resolveLinkWithDefault(m_model, plugin_sdf, "link_name");
     gzmsg << "Wave: applying to link " << m_link->GetScopedName() << std::endl;
 
-    string topicScope = utilities::computePluginTopicScope(model, plugin_sdf);
+    string topicScope = rock_gazebo_helpers::computePluginTopicScope(model, plugin_sdf);
 
     string topicNameAmplitude = topicScope + "/wave_amplitude";
     if (m_wave_amplitude_subscriber) {

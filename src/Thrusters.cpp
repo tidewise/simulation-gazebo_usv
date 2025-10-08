@@ -1,5 +1,5 @@
 #include "Thrusters.hpp"
-#include "Utilities.hpp"
+#include "RockGazeboHelpers.hpp"
 #include "Actuators.hpp"
 #include "USVPlugin.hpp"
 
@@ -22,7 +22,7 @@ void Thrusters::load(
     m_definitions = loadThrusters(actuators, plugin_sdf);
 
     // Initialize communication node and subscribe to gazebo topic
-    string topic_name = utilities::computePluginTopicScope(model, plugin_sdf) + "/thrusters";
+    string topic_name = rock_gazebo_helpers::computePluginTopicScope(model, plugin_sdf) + "/thrusters";
 
     if (m_command_subscriber) {
         m_command_subscriber->Unsubscribe();
@@ -52,15 +52,15 @@ std::vector<Thruster> Thrusters::loadThrusters(
         Thruster def;
         def.name = el->Get<string>("name");
 
-        auto link = utilities::resolveLink(m_model, plugin_sdf, def.name);
+        auto link = rock_gazebo_helpers::resolveLink(m_model, plugin_sdf, def.name);
 
         gzmsg << "Thruster: thruster " << def.name << " is link " << link->GetScopedName() << endl;
         def.actuator_id = actuators.addLink(link);
         def.link = link;
-        def.min_thrust = utilities::getParameter<double>(
+        def.min_thrust = rock_gazebo_helpers::getParameter<double>(
             "Thruster", el, "min_thrust", "N", -200
         );
-        def.max_thrust = utilities::getParameter<double>(
+        def.max_thrust = rock_gazebo_helpers::getParameter<double>(
             "Thruster", el, "max_thrust", "N", 200
         );
         def.effort = 0.0;
