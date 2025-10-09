@@ -1,5 +1,5 @@
 #include "Thrusters.hpp"
-#include "Utilities.hpp"
+#include "RockGazeboHelpers.hpp"
 #include "Actuators.hpp"
 #include "USVPlugin.hpp"
 
@@ -16,24 +16,21 @@ Thrusters::~Thrusters() {
 
 void Thrusters::load(
     Actuators& actuators, transport::NodePtr node,
-    physics::ModelPtr model, sdf::ElementPtr plugin_element
+    physics::ModelPtr model, sdf::ElementPtr plugin_sdf
 ) {
     m_model = model;
-    m_definitions = loadThrusters(actuators, plugin_element);
+    m_definitions = loadThrusters(actuators, plugin_sdf);
 
     // Initialize communication node and subscribe to gazebo topic
-    auto plugin_name = plugin_element->Get<std::string>("name");
-    string topic_name = utilities::getNamespaceFromPluginName(plugin_name) + "/thrusters";
+    string topic_name = rock_gazebo_helpers::computePluginTopicScope(model, plugin_sdf) + "/thrusters";
 
     if (m_command_subscriber) {
         m_command_subscriber->Unsubscribe();
     }
     m_command_subscriber =
-        node->Subscribe("/" + topic_name, &Thrusters::processThrusterCommand, this);
+        node->Subscribe(topic_name, &Thrusters::processThrusterCommand, this);
 
-    auto world_name = GzGet((*m_model->GetWorld()), Name, ());
-    gzmsg << "Thruster: receiving thruster commands from /"
-          << topic_name << endl;
+    gzmsg << "Thruster: receiving thruster commands from " << topic_name << endl;
 }
 
 Thruster& Thrusters::getThrusterByName(std::string const& name) {
@@ -46,26 +43,24 @@ Thruster& Thrusters::getThrusterByName(std::string const& name) {
 }
 
 std::vector<Thruster> Thrusters::loadThrusters(
-    Actuators& actuators, sdf::ElementPtr plugin_element
+    Actuators& actuators, sdf::ElementPtr plugin_sdf
 ) {
     std::vector<Thruster> definitions;
-    sdf::ElementPtr el = plugin_element->GetElement("thruster");
+    sdf::ElementPtr el = plugin_sdf->GetElement("thruster");
     while (el) {
         // Load thrusters attributes
         Thruster def;
         def.name = el->Get<string>("name");
-        auto link = utilities::getLinkFromName(m_model,def.name,plugin_element->Get<std::string>("name"));
-        if (!link) {
-            gzthrow("Thruster: thruster " + def.name + " does not exist");
-        }
 
-        gzmsg << "Thruster: thruster name: " << def.name << endl;
+        auto link = rock_gazebo_helpers::resolveLink(m_model, plugin_sdf, def.name);
+
+        gzmsg << "Thruster: thruster " << def.name << " is link " << link->GetScopedName() << endl;
         def.actuator_id = actuators.addLink(link);
         def.link = link;
-        def.min_thrust = utilities::getParameter<double>(
+        def.min_thrust = rock_gazebo_helpers::getParameter<double>(
             "Thruster", el, "min_thrust", "N", -200
         );
-        def.max_thrust = utilities::getParameter<double>(
+        def.max_thrust = rock_gazebo_helpers::getParameter<double>(
             "Thruster", el, "max_thrust", "N", 200
         );
         def.effort = 0.0;

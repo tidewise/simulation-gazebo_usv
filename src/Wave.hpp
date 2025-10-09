@@ -80,16 +80,6 @@ namespace gazebo_usv {
         double m_roll_frequency = 0;
 
         /**
-         * @brief Get the reference link where force and torque will be applied
-         *
-         * @param model model pointer
-         * @param sdf sdf element
-         * @return LinkPtr reference link.
-         */
-        LinkPtr getReferenceLink(ModelPtr const model, sdf::ElementPtr const sdf) const;
-
-
-        /**
          * @brief Subscriber callback for the wave amplitude topic
          *
          */

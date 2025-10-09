@@ -14,14 +14,18 @@ namespace gazebo_usv {
     class Actuators;
     /**
      * @brief Gazebo model plugin for applying directed force on a link
-     * 
+     *
      */
     class DirectForceApplication {
     public:
         ~DirectForceApplication();
+
+        /**
+         * @param plugin_sdf the SDF <plugin ...> element
+         */
         void load(
             Actuators& actuators, gazebo::physics::ModelPtr model,
-            gazebo::transport::NodePtr node, sdf::ElementPtr plugin_element
+            gazebo::transport::NodePtr node, sdf::ElementPtr plugin_sdf
         );
         void update(Actuators& actuators);
 

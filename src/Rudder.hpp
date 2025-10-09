@@ -16,8 +16,12 @@ namespace gazebo_usv {
         typedef ignition::math::Vector3d Vector3d;
 
     public:
+        /**
+         * @param sdf the SDF element that describes the rudder within the plugin.
+         *   The <plugin ...> tag is expected to be its direct parent
+         */
         Rudder(USVPlugin& plugin, Actuators& actuators, gazebo::physics::ModelPtr model,
-               sdf::ElementPtr sdf, std::string plugin_name);
+               sdf::ElementPtr rudder_sdf);
         ~Rudder();
 
         void update(Actuators& actuator);

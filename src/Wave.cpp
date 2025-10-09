@@ -1,5 +1,5 @@
 #include "Wave.hpp"
-#include "Utilities.hpp"
+#include "RockGazeboHelpers.hpp"
 #include <cstdlib>
 #include <math.h>
 
@@ -22,40 +22,42 @@ Wave::~Wave()
     }
 }
 
-void Wave::load(ModelPtr const _model,
-    transport::NodePtr const _node,
-    sdf::ElementPtr const _sdf)
+void Wave::load(ModelPtr const model,
+    transport::NodePtr const node,
+    sdf::ElementPtr const plugin_sdf)
 {
-    m_model = _model;
-    m_node = _node;
-    m_link = getReferenceLink(m_model, _sdf);
+    m_model = model;
+    m_node = node;
+    m_link = rock_gazebo_helpers::resolveLinkWithDefault(m_model, plugin_sdf, "link_name");
+    gzmsg << "Wave: applying to link " << m_link->GetScopedName() << std::endl;
 
-    auto pluginName = _sdf->Get<std::string>("name");
-    string topicName = utilities::getNamespaceFromPluginName(pluginName);
+    string topicScope = rock_gazebo_helpers::computePluginTopicScope(model, plugin_sdf);
 
-    string topicNameAmplitude = topicName + "/wave_amplitude";
+    string topicNameAmplitude = topicScope + "/wave_amplitude";
     if (m_wave_amplitude_subscriber) {
         m_wave_amplitude_subscriber->Unsubscribe();
     }
     m_wave_amplitude_subscriber =
-        m_node->Subscribe("/" + topicNameAmplitude, &Wave::readWaveAmplitude, this);
+        m_node->Subscribe(topicNameAmplitude, &Wave::readWaveAmplitude, this);
 
-    string topicNameFrequency = topicName + "/wave_frequency";
+    string topicNameFrequency = topicScope + "/wave_frequency";
     if (m_wave_frequency_subscriber) {
         m_wave_frequency_subscriber->Unsubscribe();
     }
     m_wave_frequency_subscriber =
-        m_node->Subscribe("/" + topicNameFrequency, &Wave::readWaveFrequency, this);
+        m_node->Subscribe(topicNameFrequency, &Wave::readWaveFrequency, this);
 
-    string topicNameRoll = topicName + "/roll_vector";
+    string topicNameRoll = topicScope + "/roll_vector";
     if (m_roll_subscriber) {
         m_roll_subscriber->Unsubscribe();
     }
-    m_roll_subscriber = m_node->Subscribe("/" + topicNameRoll, &Wave::readRoll, this);
+    m_roll_subscriber = m_node->Subscribe(topicNameRoll, &Wave::readRoll, this);
 
     auto worldName = m_model->GetWorld()->Name();
-    gzmsg << "Wave: receiving wave commands from /" << topicNameAmplitude << "and /"
-          << topicNameFrequency << endl;
+    gzmsg
+        << "Wave: receiving wave commands from "
+        << topicNameAmplitude << ", " << topicNameFrequency
+        << " and " << topicNameRoll << endl;
 
     std::srand(static_cast<unsigned int>(time(NULL)));
     m_phase_x = M_PI * (double)rand() / RAND_MAX;
@@ -63,31 +65,6 @@ void Wave::load(ModelPtr const _model,
     m_phase_z = M_PI * (double)rand() / RAND_MAX;
     m_phase_n = M_PI * (double)rand() / RAND_MAX;
 }
-
-physics::LinkPtr Wave::getReferenceLink(physics::ModelPtr const _model,
-    sdf::ElementPtr const _sdf) const
-{
-    if (_sdf->HasElement("link_name")) {
-        physics::LinkPtr link = _model->GetLink(_sdf->Get<string>("link_name"));
-        if (!link) {
-            string msg = "Wave: link " + _sdf->Get<string>("link_name") +
-                         " not found in model " + _model->GetName();
-            gzthrow(msg.c_str());
-        }
-        gzmsg << "Wave: reference link: " << link->GetName() << endl;
-        return link;
-    }
-    else if (_model->GetLinks().empty()) {
-        gzthrow("Wave: no link was defined in model!");
-    }
-    else {
-        physics::LinkPtr link = _model->GetLinks().front();
-        gzmsg << "Wave: reference link not defined, using " << link->GetName()
-              << " instead!" << endl;
-        return link;
-    }
-}
-
 
 void Wave::readWaveAmplitude(const ConstVector3dPtr& amplitude)
 {

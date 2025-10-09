@@ -2,31 +2,30 @@
 #include <gazebo_usv/Rudder.hpp>
 #include <gazebo_usv/Thruster.hpp>
 #include <gazebo_usv/USVPlugin.hpp>
-#include <gazebo_usv/Utilities.hpp>
+#include <gazebo_usv/RockGazeboHelpers.hpp>
 
 using namespace std;
 using namespace gazebo;
 using namespace gazebo_usv;
 using namespace ignition::math;
 
-Rudder::Rudder(USVPlugin& plugin, Actuators& actuators, physics::ModelPtr model, sdf::ElementPtr sdf, std::string plugin_name) {    
-    m_link_name = sdf->Get<string>("name");
-    m_link = utilities::getLinkFromName(model,m_link_name,plugin_name);
-    if (!m_link) {
-        gzthrow("Rudder: link " + m_link_name + " does not exist");
-    }
+Rudder::Rudder(USVPlugin& plugin, Actuators& actuators, physics::ModelPtr model, sdf::ElementPtr rudder_sdf) {
+    auto plugin_sdf = rudder_sdf->GetParent();
+    m_link_name = rudder_sdf->Get<string>("name");
+    m_link = rock_gazebo_helpers::resolveLink(model, plugin_sdf, m_link_name);
+    gzmsg << "Rudder: resolved rudder link " << m_link->GetScopedName() << std::endl;
 
-    auto thruster_name = sdf->Get<string>("thrusterName");
+    auto thruster_name = rudder_sdf->Get<string>("thrusterName");
     if (!thruster_name.empty()) {
         m_associated_thruster = &plugin.getThrusterByName(thruster_name);
-        m_thrust_to_speed_k = sdf->Get<float>("thrustToFlowK", 0).first;
+        m_thrust_to_speed_k = rudder_sdf->Get<float>("thrustToFlowK", 0).first;
     }
 
     m_actuator_id = actuators.addLink(m_link);
 
-    m_area = sdf->Get<float>("area", 1).first;
-    m_lift_k = sdf->Get<float>("lift_factor", 1.5).first;
-    m_drag_k = sdf->Get<float>("drag_factor", 1e-3).first;
+    m_area = rudder_sdf->Get<float>("area", 1).first;
+    m_lift_k = rudder_sdf->Get<float>("lift_factor", 1.5).first;
+    m_drag_k = rudder_sdf->Get<float>("drag_factor", 1e-3).first;
 }
 
 Rudder::~Rudder() {
