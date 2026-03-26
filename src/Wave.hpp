@@ -1,24 +1,24 @@
 #ifndef GAZEBO_WAVE_PLUGIN_HPP
 #define GAZEBO_WAVE_PLUGIN_HPP
 
-#include "base/Time.hpp"
-#include <gazebo/common/common.hh>
-#include <gazebo/physics/physics.hh>
-#include <gazebo/transport/transport.hh>
-#include <ignition/math/Vector3.hh>
+#include <gz/gazebo_usv/wave.pb.h>
+
+#include <sdf/Element.hh>
+
+#include <gz/math/Vector3.hh>
+#include <gz/sim/Entity.hh>
+#include <gz/sim/EntityComponentManager.hh>
+#include <gz/transport.hh>
+#include <gz/transport/NodeShared.hh>
+#include <sdf/Param.hh>
 
 namespace gazebo_usv {
     class Wave {
-        typedef gazebo::physics::ModelPtr ModelPtr;
-        typedef gazebo::physics::LinkPtr LinkPtr;
-        typedef gazebo::transport::NodePtr NodePtr;
-        typedef gazebo::transport::SubscriberPtr SubscriberPtr;
-
     public:
         // Wave force and torque
         struct Effects {
-            ignition::math::Vector3d force = ignition::math::Vector3d::Zero;
-            ignition::math::Vector3d torque = ignition::math::Vector3d::Zero;
+            gz::math::Vector3d force = gz::math::Vector3d::Zero;
+            gz::math::Vector3d torque = gz::math::Vector3d::Zero;
         };
         // Wave phases to be defined
         double m_phase_x = 0;
@@ -37,13 +37,16 @@ namespace gazebo_usv {
          * @param _node gazebo node
          * @param _sdf sdf element
          */
-        void load(ModelPtr const _model, NodePtr const _node, sdf::ElementPtr const _sdf);
+        void load(gz::sim::Entity model,
+            std::shared_ptr<gz::transport::Node> node,
+            sdf::ElementConstPtr const sdf,
+            gz::sim::EntityComponentManager& ecm);
 
         /**
          * @brief Update the wave effects on the model.
          *
          */
-        void update();
+        void update(gz::sim::EntityComponentManager& ecm);
 
         /**
          * @brief Computes the wave effects on a vessel.
@@ -60,22 +63,19 @@ namespace gazebo_usv {
          * @return Effects resulting force and torque to be applied at the vessel CoG.
          */
         Effects computeEffects(double seconds,
-            ignition::math::Vector3d const wave_amplitude_world,
-            ignition::math::Vector3d const wave_frequency_world,
+            gz::math::Vector3d const wave_amplitude_world,
+            gz::math::Vector3d const wave_frequency_world,
             double const roll_amplitude_world,
             double const roll_frequency_world) const;
 
     private:
-        ModelPtr m_model;
-        NodePtr m_node;
-        LinkPtr m_link;
+        gz::sim::Entity m_model;
+        gz::sim::Entity m_link;
+        std::shared_ptr<gz::transport::Node> m_node;
+        std::string m_topic_name;
 
-        SubscriberPtr m_wave_amplitude_subscriber;
-        SubscriberPtr m_wave_frequency_subscriber;
-        SubscriberPtr m_roll_subscriber;
-
-        ignition::math::Vector3d m_wave_amplitude = ignition::math::Vector3d::Zero;
-        ignition::math::Vector3d m_wave_frequency = ignition::math::Vector3d::Zero;
+        gz::math::Vector3d m_wave_amplitude = gz::math::Vector3d::Zero;
+        gz::math::Vector3d m_wave_frequency = gz::math::Vector3d::Zero;
         double m_roll_amplitude = 0;
         double m_roll_frequency = 0;
 
@@ -83,9 +83,7 @@ namespace gazebo_usv {
          * @brief Subscriber callback for the wave amplitude topic
          *
          */
-        void readWaveAmplitude(const ConstVector3dPtr&);
-        void readWaveFrequency(const ConstVector3dPtr&);
-        void readRoll(const ConstVector2dPtr&);
+        void read(gz::gazebo_usv::Wave const&);
     };
 }
 

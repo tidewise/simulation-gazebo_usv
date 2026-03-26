@@ -1,23 +1,22 @@
-find_package(Boost 1.40 COMPONENTS system REQUIRED)
-find_package(Protobuf REQUIRED)
-
-if (TARGET Boost::system)
-    list(APPEND __boost_deps DEPS_TARGET Boost::system)
-else()
-    list(APPEND __boost_deps DEPS_PLAIN Boost)
-endif()
-
-protobuf_generate_cpp(msgs_SRCS msgs_HDR msgs.proto)
+find_package(gz-msgs REQUIRED)
+gz_msgs_generate_messages(
+    TARGET gazebo_usv-msgs
+    PROTO_PACKAGE "gz.gazebo_usv"
+    MSGS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/proto
+    MSGS_PROTOS
+        ${CMAKE_CURRENT_SOURCE_DIR}/proto/gz/gazebo_usv/thruster.proto
+        ${CMAKE_CURRENT_SOURCE_DIR}/proto/gz/gazebo_usv/thrusters.proto
+        ${CMAKE_CURRENT_SOURCE_DIR}/proto/gz/gazebo_usv/wave.proto
+    DEPENDENCIES gz-msgs::gz-msgs
+)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
+find_package(gz-sim-physics-system REQUIRED)
 rock_library(gazebo_usv
-    SOURCES USVPlugin.cpp Thrusters.cpp Thruster.cpp Actuators.cpp RockGazeboHelpers.cpp Rudder.cpp Wind.cpp Wave.cpp DirectForceApplication.cpp ${msgs_SRCS}
-    HEADERS USVPlugin.hpp Thrusters.hpp Thruster.hpp Actuators.hpp Rudder.hpp Wind.hpp Wave.hpp DirectForceApplication.hpp
+    SOURCES USVPlugin.cpp Thrusters.cpp Thruster.cpp Rudder.cpp Wind.cpp Wave.cpp DirectForceApplication.cpp ${msgs_SRCS}
+    HEADERS USVPlugin.hpp Thrusters.hpp Thruster.hpp Rudder.hpp Wind.hpp Wave.hpp DirectForceApplication.hpp
     ${__boost_deps}
-    DEPS_PKGCONFIG base-types gazebo sdformat protobuf gazebo_underwater_msgs)
+    DEPS_CMAKE gz-sim-physics-system
+    DEPS_PKGCONFIG base-types sdformat protobuf)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/msgs.pb.h
-    DESTINATION include/${PROJECT_NAME})
-
-install(FILES msgs.proto
-    DESTINATION include/${PROJECT_NAME}/proto)
+target_link_libraries(gazebo_usv gazebo_usv-gazebo_usv-msgs)

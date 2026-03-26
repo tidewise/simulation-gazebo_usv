@@ -1,38 +1,35 @@
 #ifndef GAZEBO_THRUSTER_RUDDER_HPP
 #define GAZEBO_THRUSTER_RUDDER_HPP
 
-#include <gazebo/common/common.hh>
-#include <gazebo/physics/physics.hh>
-#include <gazebo/transport/transport.hh>
-#include <gazebo/msgs/msgs.hh>
-#include <gazebo_underwater/DataTypes.hpp>
+#include <gz/sim/EntityComponentManager.hh>
+#include <sdf/Element.hh>
+#include <gz/sim/Entity.hh>
+#include <gz/transport.hh>
 
 namespace gazebo_usv {
     class USVPlugin;
-    class Actuators;
     class Thruster;
 
     class Rudder {
-        typedef ignition::math::Vector3d Vector3d;
+        typedef gz::math::Vector3d Vector3d;
 
     public:
         /**
          * @param sdf the SDF element that describes the rudder within the plugin.
          *   The <plugin ...> tag is expected to be its direct parent
          */
-        Rudder(USVPlugin& plugin, Actuators& actuators, gazebo::physics::ModelPtr model,
-               sdf::ElementPtr rudder_sdf);
+        Rudder(USVPlugin& plugin, gz::sim::Entity model,
+               sdf::ElementConstPtr rudder_sdf, gz::sim::EntityComponentManager& ecm);
         ~Rudder();
 
-        void update(Actuators& actuator);
+        void update(gz::sim::EntityComponentManager& ecm);
         std::string getLinkName() const;
-        Vector3d getFlowVelocity() const;
+        Vector3d getFlowVelocity(gz::sim::EntityComponentManager& ecm) const;
 
     private:
         std::string m_link_name;
-        gazebo::physics::LinkPtr m_link;
+        gz::sim::Entity m_link;
         Thruster* m_associated_thruster = nullptr;
-        size_t m_actuator_id;
 
         float m_fluid_density = 1000;
         float m_area = 1;

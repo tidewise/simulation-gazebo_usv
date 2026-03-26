@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package gz.gazebo_usv;
+
+message Thruster
+{
+    string     name = 1;
+    double     effort = 2;
+}

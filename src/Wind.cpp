@@ -1,40 +1,40 @@
 #include "Wind.hpp"
 #include "RockGazeboHelpers.hpp"
+#include <gz/msgs/vector3d.pb.h>
+#include <gz/sim/EntityComponentManager.hh>
+#include <gz/sim/Util.hh>
+#include <gz/sim/Link.hh>
 
 using namespace std;
-using namespace gazebo;
+using namespace gz::sim;
 using namespace gazebo_usv;
-using namespace ignition::math;
+using namespace gz::math;
 
 Wind::Wind(Wind::EffectParameters const parameters) : m_parameters(parameters) {}
 
 Wind::~Wind()
 {
-    if (m_wind_velocity_subscriber)
-    {
-        m_wind_velocity_subscriber->Unsubscribe();
-    }
+    m_node->Unsubscribe(m_topic_name);
 }
 
-void Wind::load(ModelPtr const model, transport::NodePtr const node, sdf::ElementPtr const plugin_sdf)
+void Wind::load(gz::sim::Entity model,
+    std::shared_ptr<gz::transport::Node> node,
+    sdf::ElementConstPtr const plugin_sdf,
+    gz::sim::EntityComponentManager& ecm)
 {
     m_model = model;
     m_node = node;
-    m_link = rock_gazebo_helpers::resolveLinkWithDefault(model, plugin_sdf, "link_name");
-    gzmsg << "Wind: applying to link " << m_link->GetScopedName() << endl;
+    m_link = rock_gazebo_helpers::resolveLinkWithDefault(model, plugin_sdf, "link_name", ecm);
+    gzmsg << "Wind: applying to link " << gz::sim::scopedName(m_link, ecm, "::", false) << endl;
 
-    string topicName = rock_gazebo_helpers::computePluginTopicScope(model, plugin_sdf) + "/wind_velocity";
-    if (m_wind_velocity_subscriber)
-    {
-        m_wind_velocity_subscriber->Unsubscribe();
-    }
-    m_wind_velocity_subscriber = m_node->Subscribe(topicName, &Wind::readWindVelocity, this);
+    string topicName = rock_gazebo_helpers::computePluginTopicScope(model, plugin_sdf, ecm) + "/wind";
+    m_node->Subscribe(topicName, &Wind::readWindVelocity, this);
     gzmsg << "Wind: receiving wind commands from " << topicName << endl;
 
     m_parameters = loadParameters(plugin_sdf);
 }
 
-Wind::EffectParameters Wind::loadParameters(sdf::ElementPtr el) const
+Wind::EffectParameters Wind::loadParameters(sdf::ElementConstPtr el) const
 {
     gzmsg << "Wind: Loading wind effect parameters" << endl;
 
@@ -48,9 +48,9 @@ Wind::EffectParameters Wind::loadParameters(sdf::ElementPtr el) const
     return parameters;
 }
 
-void Wind::readWindVelocity(const ConstVector3dPtr &velocity)
+void Wind::readWindVelocity(const gz::msgs::Vector3d& velocity)
 {
-    m_wind_velocity = Vector3d(velocity->x(), velocity->y(), velocity->z());
+    m_wind_velocity = Vector3d(velocity.x(), velocity.y(), velocity.z());
 }
 
 Wind::Effects Wind::computeEffects(Quaterniond const body2world_orientation, Vector3d const vessel_linear_vel_world, Vector3d const wind_velocity_world) const
@@ -77,12 +77,17 @@ Wind::Effects Wind::computeEffects(Quaterniond const body2world_orientation, Vec
     return wind_effects;
 }
 
-void Wind::update()
+void Wind::update(gz::sim::EntityComponentManager& ecm)
 {
+    Link link(m_link);
+    auto body2world_pose = link.WorldPose(ecm).value();
+    auto body2world_q = body2world_pose.Rot();
+
     // Compute the new force and torque for this timestep
-    Effects effects = computeEffects(m_model->WorldPose().Rot(), m_model->WorldLinearVel(), m_wind_velocity);
+    Effects effects = computeEffects(body2world_q, link.WorldLinearVelocity(ecm).value(), m_wind_velocity);
 
     // Apply force and torque
-    m_link->AddRelativeForce(effects.force);
-    m_link->AddRelativeTorque(effects.torque);
+    auto world_force = body2world_q * effects.force;
+    auto world_torque = body2world_q * effects.torque;
+    link.AddWorldWrench(ecm, world_force, world_torque);
 }

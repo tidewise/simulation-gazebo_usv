@@ -1,45 +1,60 @@
 #ifndef GAZEBO_THRUSTER_PLUGIN_HPP
 #define GAZEBO_THRUSTER_PLUGIN_HPP
 
-#include <gazebo/common/common.hh>
-#include <gazebo/physics/physics.hh>
-#include <gazebo/transport/transport.hh>
+#include <gz/sim/Entity.hh>
+#include <gz/sim/EntityComponentManager.hh>
+#include <gz/transport.hh>
 
-#include <gazebo_usv/Actuators.hpp>
-#include <gazebo_usv/Rudder.hpp>
-#include <gazebo_usv/Thrusters.hpp>
-#include <gazebo_usv/Thruster.hpp>
-#include <gazebo_usv/Wind.hpp>
-#include <gazebo_usv/Wave.hpp>
 #include <gazebo_usv/DirectForceApplication.hpp>
+#include <gazebo_usv/Rudder.hpp>
+#include <gazebo_usv/Thruster.hpp>
+#include <gazebo_usv/Thrusters.hpp>
+#include <gazebo_usv/Wave.hpp>
+#include <gazebo_usv/Wind.hpp>
 
 namespace gazebo_usv {
-    class USVPlugin : public gazebo::ModelPlugin {
+    class USVPlugin : public gz::sim::System,
+                      public gz::sim::ISystemConfigure,
+                      public gz::sim::ISystemPreUpdate {
     public:
         ~USVPlugin();
-        virtual void Load(gazebo::physics::ModelPtr _model, sdf::ElementPtr _plugin_sdf);
+
         Rudder& getRudderByName(std::string const& name);
         Thruster& getThrusterByName(std::string const& name);
 
-    private:
-        gazebo::event::ConnectionPtr m_world_update_event;
-        gazebo::transport::NodePtr m_node;
-        gazebo::physics::ModelPtr m_model;
+        /** Method called during the Configure step of the gazebo lifecycle
+         *
+         * @param entity the entity the <plugin> tag is attached to
+         * @param sdf the SDF element representing the <plugin ...> tag for
+         *    this plugin. It has no parent (so, can't discover the SDF definition
+         *    of the entity)
+         */
+        void Configure(gz::sim::Entity const& entity,
+            std::shared_ptr<const sdf::Element> const& plugin_sdf,
+            gz::sim::EntityComponentManager& ecm,
+            gz::sim::EventManager& event_manager) override;
 
-        Actuators* m_actuators = nullptr;
+        /** Method called during the PreUpdate step of the gazebo lifecycle
+         */
+        void PreUpdate(gz::sim::UpdateInfo const& info,
+            gz::sim::EntityComponentManager& ecm) override;
+
+    private:
+        std::shared_ptr<gz::transport::Node> m_node;
+        gz::sim::Entity m_model;
+
         std::vector<Rudder> m_rudders;
         Thrusters* m_thrusters = nullptr;
         Wind* m_wind = nullptr;
         Wave* m_wave = nullptr;
         DirectForceApplication* m_direct_force = nullptr;
 
-        void updateBegin(gazebo::common::UpdateInfo const& info);
-
-        std::vector<Rudder> loadRudders(sdf::ElementPtr plugin_sdf);
-        Thrusters* loadThrusters(sdf::ElementPtr plugin_sdf);
-        Wind* loadWindParameters(sdf::ElementPtr plugin_sdf);
-        Wave* loadWaveParameters(sdf::ElementPtr plugin_sdf);
-        DirectForceApplication* loadDirectForceApplicationParameters(sdf::ElementPtr plugin_sdf);
+        std::vector<Rudder> loadRudders(sdf::ElementConstPtr plugin_sdf, gz::sim::EntityComponentManager& ecm);
+        Thrusters* loadThrusters(sdf::ElementConstPtr plugin_sdf, gz::sim::EntityComponentManager& ecm);
+        Wind* loadWindParameters(sdf::ElementConstPtr plugin_sdf, gz::sim::EntityComponentManager& ecm);
+        Wave* loadWaveParameters(sdf::ElementConstPtr plugin_sdf, gz::sim::EntityComponentManager& ecm);
+        DirectForceApplication* loadDirectForceApplicationParameters(
+            sdf::ElementConstPtr plugin_sdf, gz::sim::EntityComponentManager& ecm);
     };
 }
 

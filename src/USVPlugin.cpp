@@ -1,140 +1,164 @@
 #include <gazebo_usv/USVPlugin.hpp>
 
-using namespace std;
-using namespace gazebo;
-using namespace gazebo_usv;
+#include <gz/common/Console.hh>
+#include <gz/plugin/Register.hh>
+#include <gz/transport.hh>
 
-USVPlugin::~USVPlugin() {
+using namespace std;
+using namespace gazebo_usv;
+using namespace gz;
+using namespace gz::sim;
+
+USVPlugin::~USVPlugin()
+{
     delete m_wind;
     delete m_wave;
     delete m_thrusters;
-    delete m_actuators;
     delete m_direct_force;
 }
 
-void USVPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr plugin_sdf)
+void USVPlugin::Configure(gz::sim::Entity const& entity,
+    std::shared_ptr<const sdf::Element> const& plugin_sdf,
+    gz::sim::EntityComponentManager& ecm,
+    gz::sim::EventManager& event_manager)
 {
     gzmsg << "Loading USVPlugin" << std::endl;
-    m_model = _model;
+    m_model = entity;
 
-    m_node = transport::NodePtr(new transport::Node());
-    m_node->Init();
+    m_node.reset(new transport::Node());
 
-    m_actuators = new Actuators(m_model, m_node);
-
-    m_world_update_event = event::Events::ConnectWorldUpdateBegin(
-        boost::bind(&USVPlugin::updateBegin, this, _1)
-    );
-
-    auto plugin_name = plugin_sdf->Get<std::string>("name");
-    if (plugin_name.find("thrusters") != std::string::npos) {
-        m_thrusters = loadThrusters(plugin_sdf);
-        m_rudders = loadRudders(plugin_sdf);
+    auto thrusters_sdf = plugin_sdf->FindElement("thrusters");
+    if (thrusters_sdf) {
+        m_thrusters = loadThrusters(thrusters_sdf, ecm);
     }
-    else if (plugin_name.find("wind_dynamics") != std::string::npos) {
-        m_wind = loadWindParameters(plugin_sdf);
+
+    auto rudders_sdf = plugin_sdf->FindElement("rudders");
+    if (rudders_sdf) {
+        m_rudders = loadRudders(rudders_sdf, ecm);
     }
-    else if (plugin_name.find("wave_dynamics") != std::string::npos) {
-        m_wave = loadWaveParameters(plugin_sdf);
+
+    auto wind_sdf = plugin_sdf->FindElement("wind_dynamics");
+    if (wind_sdf) {
+        m_wind = loadWindParameters(wind_sdf, ecm);
     }
-    else if (plugin_name.find("direct_force") != std::string::npos) {
-        m_direct_force = loadDirectForceApplicationParameters(plugin_sdf);
+
+    auto wave_sdf = plugin_sdf->FindElement("wave_dynamics");
+    if (wave_sdf) {
+        m_wave = loadWaveParameters(wave_sdf, ecm);
+    }
+
+    auto direct_force_sdf = plugin_sdf->FindElement("direct_force");
+    if (direct_force_sdf) {
+        m_direct_force = loadDirectForceApplicationParameters(direct_force_sdf, ecm);
     }
 }
 
-Rudder& USVPlugin::getRudderByName(std::string const& name) {
+Rudder& USVPlugin::getRudderByName(std::string const& name)
+{
     for (auto& rudder : m_rudders) {
         if (rudder.getLinkName() == name) {
             return rudder;
         }
     }
-    gzthrow("no rudder named " + name);
+    throw std::invalid_argument("no rudder named " + name);
 }
 
-Thruster& USVPlugin::getThrusterByName(std::string const& name) {
+Thruster& USVPlugin::getThrusterByName(std::string const& name)
+{
     return m_thrusters->getThrusterByName(name);
 }
 
-std::vector<Rudder> USVPlugin::loadRudders(sdf::ElementPtr plugin_sdf) {
-    if (!plugin_sdf || !plugin_sdf->HasElement("rudder")) {
-        return {};
-    }
-
+std::vector<Rudder> USVPlugin::loadRudders(sdf::ElementConstPtr plugin_sdf,
+    gz::sim::EntityComponentManager& ecm)
+{
     std::vector<Rudder> rudders;
 
-    sdf::ElementPtr el = plugin_sdf->GetElement("rudder");
+    sdf::ElementConstPtr el = plugin_sdf->FindElement("rudder");
     while (el) {
-        rudders.push_back(Rudder(*this, *m_actuators, m_model, el));
+        rudders.push_back(Rudder(*this, m_model, el, ecm));
         el = el->GetNextElement("rudder");
     }
 
     return rudders;
 }
 
-Thrusters* USVPlugin::loadThrusters(sdf::ElementPtr plugin_sdf) {
+Thrusters* USVPlugin::loadThrusters(sdf::ElementConstPtr plugin_sdf,
+    gz::sim::EntityComponentManager& ecm)
+{
     if (!plugin_sdf || !plugin_sdf->HasElement("thruster")) {
         return nullptr;
     }
 
     Thrusters* thrusters = new Thrusters;
-    thrusters->load(*m_actuators, m_node, m_model, plugin_sdf);
+    thrusters->load(m_node, m_model, plugin_sdf, ecm);
     return thrusters;
 }
 
-Wind* USVPlugin::loadWindParameters(sdf::ElementPtr plugin_sdf) {
+Wind* USVPlugin::loadWindParameters(sdf::ElementConstPtr plugin_sdf,
+    gz::sim::EntityComponentManager& ecm)
+{
     if (!plugin_sdf) {
         return nullptr;
     }
 
     Wind* wind = new Wind;
-    wind->load(m_model, m_node, plugin_sdf);
+    wind->load(m_model, m_node, plugin_sdf, ecm);
     return wind;
 }
 
-Wave* USVPlugin::loadWaveParameters(sdf::ElementPtr plugin_sdf) {
+Wave* USVPlugin::loadWaveParameters(sdf::ElementConstPtr plugin_sdf,
+    gz::sim::EntityComponentManager& ecm)
+{
     if (!plugin_sdf) {
         return nullptr;
     }
 
     Wave* wave = new Wave;
-    wave->load(m_model, m_node, plugin_sdf);
+    wave->load(m_model, m_node, plugin_sdf, ecm);
     return wave;
 }
 
 DirectForceApplication* USVPlugin::loadDirectForceApplicationParameters(
-    sdf::ElementPtr plugin_sdf)
+    sdf::ElementConstPtr plugin_sdf,
+    gz::sim::EntityComponentManager& ecm)
 {
     if (!plugin_sdf) {
         return nullptr;
     }
 
     DirectForceApplication* direct_force = new DirectForceApplication;
-    direct_force->load(*m_actuators, m_model, m_node, plugin_sdf);
+    direct_force->load(m_model, m_node, plugin_sdf, ecm);
 
     return direct_force;
 }
 
-
-void USVPlugin::updateBegin(common::UpdateInfo const& info) {
+void USVPlugin::PreUpdate(gz::sim::UpdateInfo const& info,
+    gz::sim::EntityComponentManager& ecm)
+{
     for (auto& rudder : m_rudders) {
-        rudder.update(*m_actuators);
+        rudder.update(ecm);
     }
 
     if (m_thrusters) {
-        m_thrusters->update(*m_actuators);
+        m_thrusters->update(ecm);
     }
 
     if (m_wind) {
-        m_wind->update();
+        m_wind->update(ecm);
     }
 
     if (m_wave) {
-        m_wave->update();
+        m_wave->update(ecm);
     }
 
     if (m_direct_force) {
-        m_direct_force->update(*m_actuators);
+        m_direct_force->update(ecm);
     }
 }
 
-GZ_REGISTER_MODEL_PLUGIN(USVPlugin);
+GZ_ADD_PLUGIN(
+    USVPlugin,
+    gz::sim::System,
+    USVPlugin::ISystemConfigure,
+    USVPlugin::ISystemPreUpdate
+);

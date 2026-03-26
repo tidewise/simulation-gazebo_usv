@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package gz.gazebo_usv;
+
+import "gz/gazebo_usv/thruster.proto";
+
+message Thrusters
+{
+    repeated gz.gazebo_usv.Thruster   thrusters = 1;
+}

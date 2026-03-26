@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package gz.gazebo_usv;
+
+import "gz/msgs/vector3d.proto";
+
+message Wave
+{
+    gz.msgs.Vector3d amplitude = 1;
+    gz.msgs.Vector3d frequency = 2;
+    double roll_amplitude = 3;
+    double roll_frequency = 4;
+}

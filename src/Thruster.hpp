@@ -1,24 +1,26 @@
 #ifndef GAZEBO_USV_THRUSTER_HPP
 #define GAZEBO_USV_THRUSTER_HPP
 
-#include <gazebo/physics/physics.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/math/Vector3.hh>
+#include <gz/sim/Entity.hh>
+#include <gz/sim/EntityComponentManager.hh>
 
 namespace gazebo_usv {
     class Thruster {
         friend class Thrusters;
-        typedef ignition::math::Vector3d Vector3d;
+        typedef gz::math::Vector3d Vector3d;
 
     public:
-
         std::string getLinkName() const;
-        gazebo::physics::LinkPtr getLink();
+        gz::math::Vector3d getWorldLinearVelocity(gz::sim::EntityComponentManager& ecm) const;
+        gz::math::Pose3d getWorldPose(gz::sim::EntityComponentManager& ecm) const;
         float getEffort() const;
-        float getAdvanceSpeed() const;
+        float getAdvanceSpeed(gz::sim::EntityComponentManager& ecm) const;
 
     private:
         std::string name;
-        size_t actuator_id;
-        gazebo::physics::LinkPtr link;
+        gz::sim::Entity link;
         double min_thrust = 0;
         double max_thrust = 0;
         double effort = 0;

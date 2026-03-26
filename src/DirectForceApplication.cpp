@@ -1,26 +1,23 @@
 #include <gazebo_usv/DirectForceApplication.hpp>
 
+#include <gz/sim/System.hh>
+#include <gz/sim/Util.hh>
+#include <gz/sim/Link.hh>
+#include <stdexcept>
 #include <string>
 
-#include <gazebo/physics/Link.hh>
-#include <gazebo/physics/Model.hh>
-#include <gazebo/physics/World.hh>
-
-#include <gazebo_usv/Actuators.hpp>
 #include "RockGazeboHelpers.hpp"
 
 using namespace gazebo_usv;
 
 DirectForceApplication::~DirectForceApplication() {
-    if (m_command_subscriber) {
-        m_command_subscriber->Unsubscribe();
-    }
 }
 
 void DirectForceApplication::load(
-    Actuators& actuators, gazebo::physics::ModelPtr model,
-    gazebo::transport::NodePtr node,
-    sdf::ElementPtr plugin_sdf
+    gz::sim::Entity model,
+    std::shared_ptr<gz::transport::Node> node,
+    sdf::ElementConstPtr plugin_sdf,
+    gz::sim::EntityComponentManager& ecm
 ) {
     auto link_name = plugin_sdf->Get<std::string>("link");
     if (link_name.empty()) {
@@ -28,33 +25,25 @@ void DirectForceApplication::load(
                       "but does not defines a link parameter. Please name the link\n"
                       "you want to apply a force inside the <plugin> tag, e.g.:\n"
                       "<link>'link_1'</link> ";
-        gzthrow(msg);
+        throw std::invalid_argument(msg);
     }
 
-    auto link = rock_gazebo_helpers::resolveLink(model, plugin_sdf, link_name);
-    gzmsg << "DirectForceApplication: applying on link " << link->GetScopedName() << std::endl;
-    m_link_id = actuators.addLink(link);
+    m_link = rock_gazebo_helpers::resolveLinkRecursive(model, link_name, ecm);
+    gzmsg << "DirectForceApplication: applying on link " << gz::sim::scopedName(model, ecm, "::", false) << std::endl;
 
     // Initialize communication node and subscribe to gazebo topic
-    std::string topic_name = rock_gazebo_helpers::computePluginTopicScope(model, plugin_sdf) +
-        "/" + link->GetName() + "/gazebo_usv_force";
-    if (m_command_subscriber) {
-        m_command_subscriber->Unsubscribe();
-    }
-    m_command_subscriber =
-        node->Subscribe(topic_name, &DirectForceApplication::processDirectionalForceCommand, this);
+    std::string topic_name = gz::sim::topicFromScopedName(m_link, ecm) + "/gazebo_usv_force";
+    node->Subscribe(topic_name, &DirectForceApplication::processDirectionalForceCommand, this);
 
     gzmsg << "DirectForceApplication: receiving direct force commands from "
           << topic_name << std::endl;
 }
 
-void DirectForceApplication::processDirectionalForceCommand(ConstVector3dPtr const& force_msg) {
-    m_force_cmd.X() = force_msg->has_x() ? force_msg->x() : 0.;
-    m_force_cmd.Y() = force_msg->has_y() ? force_msg->y() : 0.;
-    m_force_cmd.Z() = force_msg->has_z() ? force_msg->z() : 0.;
+void DirectForceApplication::processDirectionalForceCommand(gz::msgs::Vector3d const& force_msg) {
+    m_force_cmd = rock_gazebo_helpers::proto2Gz(force_msg);
 }
 
-void DirectForceApplication::update(Actuators& actuators) {
-    actuators.applyForce(m_link_id, m_force_cmd);
+void DirectForceApplication::update(gz::sim::EntityComponentManager& ecm) {
+    gz::sim::Link(m_link).AddForceInInertialFrame(ecm, m_force_cmd);
 }
 

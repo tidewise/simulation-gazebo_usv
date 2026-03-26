@@ -1,14 +1,13 @@
 #ifndef GAZEBO_USV_DIRECT_FORCEAPPLICATION_HPP
 #define GAZEBO_USV_DIRECT_FORCEAPPLICATION_HPP
 
-#include <gazebo/common/UpdateInfo.hh>
-#include <gazebo/msgs/vector3d.pb.h>
-#include <gazebo/physics/PhysicsTypes.hh>
-#include <gazebo/transport/TransportTypes.hh>
+#include <gz/msgs/vector3d.pb.h>
+#include <gz/sim/System.hh>
+#include <gz/transport.hh>
 
 #include <sdf/Element.hh>
 
-#include <ignition/math/Vector3.hh>
+#include <gz/math/Vector3.hh>
 
 namespace gazebo_usv {
     class Actuators;
@@ -24,17 +23,18 @@ namespace gazebo_usv {
          * @param plugin_sdf the SDF <plugin ...> element
          */
         void load(
-            Actuators& actuators, gazebo::physics::ModelPtr model,
-            gazebo::transport::NodePtr node, sdf::ElementPtr plugin_sdf
+            gz::sim::Entity model,
+            std::shared_ptr<gz::transport::Node> node,
+            sdf::ElementConstPtr plugin_sdf,
+            gz::sim::EntityComponentManager& ecm
         );
-        void update(Actuators& actuators);
+        void update(gz::sim::EntityComponentManager& ecm);
 
     private:
-        gazebo::transport::SubscriberPtr m_command_subscriber;
-        ignition::math::Vector3d m_force_cmd;
-        size_t m_link_id;
+        gz::sim::Entity m_link;
+        gz::math::Vector3d m_force_cmd = gz::math::Vector3d::Zero;
 
-        void processDirectionalForceCommand(ConstVector3dPtr const& force_msg);
+        void processDirectionalForceCommand(gz::msgs::Vector3d const& force_msg);
     };
 }
 

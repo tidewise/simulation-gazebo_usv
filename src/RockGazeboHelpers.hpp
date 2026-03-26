@@ -1,69 +1,22 @@
-#ifndef GAZEBO_THRUSTER_UTILITIES_HPP
-#define GAZEBO_THRUSTER_UTILITIES_HPP
+#ifndef GAZEBO_USV_ROCK_GAZEBO_HELPER_HPP
+#define GAZEBO_USV_ROCK_GAZEBO_HELPER_HPP
 
-#include <gazebo/common/Console.hh>
-#include <gazebo/physics/physics.hh>
-#include <sdf/sdf.hh>
+#include <Eigen/Geometry>
+#include <base/Float.hpp>
+#include <base/samples/Frame.hpp>
+#include <gz/math.hh>
+#include <gz/math/Vector3.hh>
+#include <gz/math/Vector2.hh>
+#include <gz/msgs/details/image.pb.h>
+#include <gz/msgs/image.pb.h>
+#include <gz/msgs/vector3d.pb.h>
+#include <gz/msgs/vector2d.pb.h>
+#include <gz/sim/EntityComponentManager.hh>
+#include <gz/sim/Model.hh>
+#include <gz/sim/Util.hh>
 
-/** Generic helpers helpful to develop plugins in relation (but with no dependencies on)
- * rock-gazebo
- *
- * Using these heleprs do NOT create a dependency on rock-gazebo. They are generic
- * helpers for the most part, and also implement the way rock-gazebo allows to
- * handle hierarchical models meaningfully. This last part is a set of
- * principles/best practices and not a direct dependency.
- *
- * We did not want to create a full package to distribute them ... they are meant
- * to be copied to the package(s) where they are needed.
- */
 namespace rock_gazebo_helpers {
-    /** Looks for a <plugin> element
-     *
-     * This methods searches for a plugin element, direct child of
-     * \c enclosing, whose filename is the given file name. It differs
-     * from \c getPluginElement by the way it handles the missing case.
-     *
-     * @return a null pointer if the plugin could not be found
-     * @see getPluginElement
-     */
-    sdf::ElementPtr findPluginElement(sdf::ElementPtr enclosing,
-        std::string const& fileName);
-
-    /** Looks for a <plugin> element
-     *
-     * This methods searches for a plugin element, direct child of
-     * \c enclosing, whose name is the given name. It differs
-     * from \c getPluginElement by the way it handles the missing case.
-     *
-     * @return a null pointer if the plugin could not be found
-     * @see getPluginElement
-     */
-    sdf::ElementPtr findPluginElementByName(sdf::ElementPtr enclosing,
-        std::string const& plugin_name);
-
-    /** Resolves for a <plugin> element
-     *
-     * This methods searches for a plugin element, direct child of
-     * \c enclosing, whose filename is the given file name. It differs
-     * from \c findPluginElement by the way it handles the missing case.
-     *
-     * @throw invalid_argument if the plugin could not be found
-     * @see findPluginElement
-     */
-    sdf::ElementPtr getPluginElement(sdf::ElementPtr enclosing,
-        std::string const& fileName);
-
-    /** Resolves for a <plugin> element
-     *
-     * This methods searches for a plugin element, direct child of
-     * \c enclosing, whose name is the given name. It differs
-     * from \c findPluginElementByName by the way it handles the missing case.
-     *
-     * @throw invalid_argument if the plugin could not be found
-     * @see findPluginElement
-     */
-    sdf::ElementPtr getPluginElementByName(sdf::ElementPtr enclosing,
-        std::string const& plugin_name);
+    class SensorTask;
 
     /** Get a typed parameter from the given element
      *
@@ -71,7 +24,7 @@ namespace rock_gazebo_helpers {
      */
     template <class T>
     T getParameter(std::string plugin_name,
-        sdf::ElementPtr element,
+        sdf::ElementConstPtr element,
         std::string parameter_name,
         std::string dimension,
         T default_value)
@@ -90,26 +43,18 @@ namespace rock_gazebo_helpers {
 
     /** Get the scope of a topic that is relative to the given model
      */
-    std::string computeModelTopicScope(gazebo::physics::ModelPtr model);
+    std::string computeModelTopicScope(gz::sim::Entity model,
+        gz::sim::EntityComponentManager& ecm);
 
     /** Get the scope of a topic that is published by the given plugin
      */
-    std::string computePluginTopicScope(gazebo::physics::ModelPtr model,
-        sdf::ElementPtr plugin);
+    std::string computeModelTopicScope(gz::sim::Entity model,
+        sdf::ElementConstPtr plugin,
+        gz::sim::EntityComponentManager& ecm);
 
-    /** Compute the actual name of a link based on a relative link name from the SDF
-     *
-     * To account for model inclusions, a plugin in an included model that has to
-     * resolve a link name will have to prepend the path between the root model
-     * and the parent model of the plugin.
-     *
-     * This method assumes that the plugin name has been re-scoped that way, i.e.
-     * that the relative path to the root is simply everything before :: in
-     * the plugin name
-     */
-    gazebo::physics::LinkPtr resolveLink(gazebo::physics::ModelPtr model,
-        sdf::ElementPtr plugin,
-        std::string const& link_name);
+    std::string computePluginTopicScope(gz::sim::Entity model,
+        sdf::ElementConstPtr plugin,
+        gz::sim::EntityComponentManager& ecm);
 
     /** Resolve a link from name if an attribute provides it, or return the first link
      * of the model
@@ -120,9 +65,198 @@ namespace rock_gazebo_helpers {
      * @param element_name the name of the element that contains the link name. If
      *    it not present, the function will return the first link of the model.
      */
-    gazebo::physics::LinkPtr resolveLinkWithDefault(gazebo::physics::ModelPtr model,
-        sdf::ElementPtr plugin_sdf,
-        std::string const& element_name);
+    gz::sim::Entity resolveLinkWithDefault(gz::sim::Entity model,
+        sdf::ElementConstPtr plugin_sdf,
+        std::string const& element_name,
+        gz::sim::EntityComponentManager& ecm);
+
+    inline gz::math::Vector3d proto2Gz(gz::msgs::Vector3d const& gz)
+    {
+        return gz::math::Vector3d(gz.x(), gz.x(), gz.x());
+    }
+
+    inline gz::math::Vector2d proto2Gz(gz::msgs::Vector2d const& gz)
+    {
+        return gz::math::Vector2d(gz.x(), gz.x());
+    }
+
+    inline Eigen::Vector3d gz2Eigen(gz::math::Vector3d const& gz)
+    {
+        return Eigen::Vector3d(gz.X(), gz.Y(), gz.Z());
+    }
+
+    inline Eigen::Vector3d gz2Eigen(std::optional<gz::math::Vector3d> const& gz)
+    {
+        if (gz.has_value()) {
+            return gz2Eigen(gz.value());
+        }
+
+        return Eigen::Vector3d(base::unknown<double>(),
+            base::unknown<double>(),
+            base::unknown<double>());
+    }
+
+    inline Eigen::Quaterniond gz2Eigen(gz::math::Quaterniond const& gz)
+    {
+        return Eigen::Quaterniond(gz.W(), gz.X(), gz.Y(), gz.Z());
+    }
+
+    inline Eigen::Quaterniond gz2Eigen(std::optional<gz::math::Quaterniond> const& gz)
+    {
+        if (gz.has_value()) {
+            return gz2Eigen(gz.value());
+        }
+
+        return Eigen::Quaterniond(base::unknown<double>(),
+            base::unknown<double>(),
+            base::unknown<double>(),
+            base::unknown<double>());
+    }
+
+    inline Eigen::Isometry3d gz2Eigen(gz::math::Pose3d const& gz)
+    {
+        Eigen::Vector3d pos = gz2Eigen(gz.Pos());
+        Eigen::Quaterniond rot = gz2Eigen(gz.Rot());
+        Eigen::Isometry3d pose;
+        pose.setIdentity();
+        pose.translate(pos);
+        pose.rotate(rot);
+        return pose;
+    }
+
+    inline Eigen::Isometry3d gz2Eigen(std::optional<gz::math::Pose3d> const& gz)
+    {
+        if (gz.has_value()) {
+            return gz2Eigen(gz.value());
+        }
+
+        Eigen::Isometry3d pose;
+        pose.matrix() *= base::unknown<double>();
+        return pose;
+    }
+
+    inline gz::math::Vector3d eigen2Gz(Eigen::Vector3d const& gz)
+    {
+        return gz::math::Vector3d(gz.x(), gz.y(), gz.z());
+    }
+
+    inline std::pair<int, base::samples::frame::frame_mode_t> gzToRock(
+        gz::msgs::PixelFormatType gz)
+    {
+        using namespace base::samples::frame;
+        using std::make_pair;
+
+        switch (gz) {
+            case gz::msgs::RGB_INT8:
+                return make_pair(8, MODE_RGB);
+            case gz::msgs::RGB_INT16:
+                return make_pair(16, MODE_RGB);
+            case gz::msgs::RGB_INT32:
+                return make_pair(32, MODE_RGB);
+            case gz::msgs::RGBA_INT8:
+                return make_pair(8, MODE_RGB32);
+            case gz::msgs::BGR_INT8:
+                return make_pair(8, MODE_BGR);
+            case gz::msgs::BGR_INT16:
+                return make_pair(16, MODE_BGR);
+            case gz::msgs::BGR_INT32:
+                return make_pair(32, MODE_BGR);
+            case gz::msgs::BAYER_RGGB8:
+                return make_pair(8, MODE_BAYER_RGGB);
+            case gz::msgs::BAYER_BGGR8:
+                return make_pair(8, MODE_BAYER_BGGR);
+            case gz::msgs::BAYER_GBRG8:
+                return make_pair(8, MODE_BAYER_GBRG);
+            case gz::msgs::BAYER_GRBG8:
+                return make_pair(8, MODE_BAYER_GRBG);
+            default:
+                throw std::invalid_argument(
+                    "received image that cannot represented in Rock");
+        }
+    }
+
+    inline std::list<std::string> splitScopedName(std::string const& scopedName)
+    {
+        std::list<std::string> result;
+        std::string::size_type delim = scopedName.find("::"), current = 0;
+        while (delim != std::string::npos) {
+            result.push_back(scopedName.substr(current, delim));
+            current = delim + 2;
+            delim = scopedName.find("::", current);
+        }
+        result.push_back(scopedName.substr(current));
+        return result;
+    }
+
+    inline gz::sim::Entity resolveSubmodelRecursive(gz::sim::Entity const& root,
+        std::list<std::string> const& names,
+        gz::sim::EntityComponentManager& ecm)
+    {
+        auto context = root;
+        for (auto const& n : names) {
+            auto child = gz::sim::Model(context).ModelByName(ecm, n);
+            if (child == gz::sim::kNullEntity) {
+                throw std::invalid_argument("could not find child model " + n + " of " +
+                                            gz::sim::scopedName(context, ecm, "::", false));
+            }
+
+            context = child;
+        }
+
+        return context;
+    }
+
+    inline gz::sim::Entity resolveSubmodelRecursive(gz::sim::Entity const& root,
+        std::string const& scoped_name,
+        gz::sim::EntityComponentManager& ecm)
+    {
+        return resolveSubmodelRecursive(root, splitScopedName(scoped_name), ecm);
+    }
+
+    inline gz::sim::Entity resolveJointRecursive(gz::sim::Entity const& root,
+        std::string const& scopedName,
+        gz::sim::EntityComponentManager& ecm)
+    {
+        auto names = splitScopedName(scopedName);
+
+        auto jointName = names.back();
+        names.pop_back();
+
+        if (gz::sim::Model(root).Name(ecm) == names.front()) {
+            names.pop_front();
+        }
+
+        auto submodel = resolveSubmodelRecursive(root, names, ecm);
+
+        auto joint = gz::sim::Model(submodel).JointByName(ecm, jointName);
+        if (joint == gz::sim::kNullEntity) {
+            throw std::invalid_argument("could not find child joint " + jointName +
+                                        " of " +
+                                        gz::sim::scopedName(submodel, ecm, "::", false));
+        }
+
+        return joint;
+    }
+
+    inline gz::sim::Entity resolveLinkRecursive(gz::sim::Entity const& root,
+        std::string const& scopedName,
+        gz::sim::EntityComponentManager& ecm)
+    {
+        auto names = splitScopedName(scopedName);
+
+        auto linkName = names.back();
+        names.pop_back();
+
+        auto submodel = resolveSubmodelRecursive(root, names, ecm);
+
+        auto link = gz::sim::Model(submodel).LinkByName(ecm, linkName);
+        if (link == gz::sim::kNullEntity) {
+            throw std::invalid_argument("could not find child link " + linkName + " of " +
+                                        gz::sim::scopedName(submodel, ecm, "::", false));
+        }
+
+        return link;
+    }
 }
 
 #endif
