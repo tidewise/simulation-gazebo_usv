@@ -34,9 +34,10 @@ links whose X axis is the thrust direction, and then link them with the plugin:
 The name of the thruster is the name of the link, related to the model in which the plugin
 is added. The plugin creates a topic of type `gz.gazebo_usv.Thrusters` that allows to
 control all the thrusters in a given plugin block. This topic name is by default
-the `/thrusters` subtopic of the model's topic name (which is of the form
-`/model/model_name/model/submodel_name`). Define the `<topic>` element as child of
-the `thrusters` element to override.
+the `thrusters` subtopic of the model's topic name (which is of the form
+`/model/model_name/model/submodel_name`). By defining the `<topic>` element as child of
+the `thrusters` element, the topic name will be `$BASENAME/thrusters/TOPIC_NAME`, which
+allows to have more than one set of thrusters in a given model.
 
 ## Rudders
 

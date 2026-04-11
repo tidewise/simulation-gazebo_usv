@@ -11,6 +11,9 @@ namespace gazebo_usv {
 
     /// \brief Name of the transport topic where a thruster is expecting its
     /// command.
+    ///
+    /// When the thruster's topic is explicitly given, this component contains the
+    /// basename of the actual topic
     using ThrustersTopic = gz::sim::components::Component<std::string,
         class ThrustersTopicTag,
         gz::sim::serializers::StringSerializer>;
