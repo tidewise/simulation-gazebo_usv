@@ -5,6 +5,8 @@
 #include <gz/sim/Util.hh>
 #include <gz/sim/Link.hh>
 
+#include "Components.hpp"
+
 using namespace std;
 using namespace gz::sim;
 using namespace gazebo_usv;
@@ -27,9 +29,13 @@ void Wind::load(gz::sim::Entity model,
     m_link = rock_gazebo_helpers::resolveLinkWithDefault(model, plugin_sdf, "link_name", ecm);
     gzmsg << "Wind: applying to link " << gz::sim::scopedName(m_link, ecm, "::", false) << endl;
 
-    string topicName = rock_gazebo_helpers::computePluginTopicScope(model, plugin_sdf, ecm) + "/wind";
-    m_node->Subscribe(topicName, &Wind::readWindVelocity, this);
-    gzmsg << "Wind: receiving wind commands from " << topicName << endl;
+    auto subtopic = plugin_sdf->Get<string>("topic", "wind").first;
+    auto topic_name = gz::sim::topicFromScopedName(model, ecm) + "/" + subtopic;
+
+    ecm.CreateComponent(m_model, WindSpeedTopic(m_topic_name));
+    m_node->Subscribe(m_topic_name, &Wind::readWindVelocity, this);
+    m_topic_name = topic_name;
+    gzmsg << "Wind: receiving wind commands from " << topic_name << endl;
 
     m_parameters = loadParameters(plugin_sdf);
 }

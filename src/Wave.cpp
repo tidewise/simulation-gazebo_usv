@@ -6,6 +6,8 @@
 #include <gz/sim/Link.hh>
 #include <math.h>
 
+#include "Components.hpp"
+
 using namespace std;
 using namespace gz::sim;
 using namespace gazebo_usv;
@@ -29,11 +31,14 @@ void Wave::load(gz::sim::Entity model,
         ecm);
     gzmsg << "Wave: applying to link " << gz::sim::scopedName(m_link, ecm, "::", false) << std::endl;
 
-    string topicScope = rock_gazebo_helpers::computePluginTopicScope(model, sdf, ecm);
-    m_topic_name = topicScope + "/waves";
-    m_node->Subscribe(m_topic_name, &Wave::read, this);
+    auto subtopic = sdf->Get<string>("topic", "wave").first;
+    auto topic_name = gz::sim::topicFromScopedName(model, ecm) + "/" + subtopic;
 
-    gzmsg << "Wave: receiving wave commands from " << m_topic_name << endl;
+    ecm.CreateComponent(m_model, WaveParametersTopic(topic_name));
+    m_node->Subscribe(topic_name, &Wave::read, this);
+    m_topic_name = topic_name;
+
+    gzmsg << "Wave: receiving wave commands from " << topic_name << endl;
 
     std::srand(static_cast<unsigned int>(time(NULL)));
     m_phase_x = M_PI * (double)rand() / RAND_MAX;
