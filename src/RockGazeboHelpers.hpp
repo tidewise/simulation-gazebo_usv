@@ -5,12 +5,12 @@
 #include <base/Float.hpp>
 #include <base/samples/Frame.hpp>
 #include <gz/math.hh>
-#include <gz/math/Vector3.hh>
 #include <gz/math/Vector2.hh>
+#include <gz/math/Vector3.hh>
 #include <gz/msgs/details/image.pb.h>
 #include <gz/msgs/image.pb.h>
-#include <gz/msgs/vector3d.pb.h>
 #include <gz/msgs/vector2d.pb.h>
+#include <gz/msgs/vector3d.pb.h>
 #include <gz/sim/EntityComponentManager.hh>
 #include <gz/sim/Model.hh>
 #include <gz/sim/Util.hh>
@@ -29,14 +29,15 @@ namespace rock_gazebo_helpers {
         std::string dimension,
         T default_value)
     {
-        gzmsg << plugin_name << ": " << parameter_name;
         if (element->HasElement(parameter_name.c_str())) {
             T var = element->Get<T>(parameter_name.c_str());
-            gzmsg << "=" << var << " " << dimension << std::endl;
+            gzmsg << plugin_name << ": " << parameter_name << "=" << var << " "
+                  << dimension << std::endl;
             return var;
         }
         else {
-            gzmsg << " using default " << default_value << " " << dimension << std::endl;
+            gzmsg << plugin_name << ": " << parameter_name << " using default "
+                  << default_value << " " << dimension << std::endl;
             return default_value;
         }
     }
@@ -196,8 +197,9 @@ namespace rock_gazebo_helpers {
         for (auto const& n : names) {
             auto child = gz::sim::Model(context).ModelByName(ecm, n);
             if (child == gz::sim::kNullEntity) {
-                throw std::invalid_argument("could not find child model " + n + " of " +
-                                            gz::sim::scopedName(context, ecm, "::", false));
+                throw std::invalid_argument(
+                    "could not find child model " + n + " of " +
+                    gz::sim::scopedName(context, ecm, "::", false));
             }
 
             context = child;
