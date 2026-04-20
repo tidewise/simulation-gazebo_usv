@@ -22,8 +22,12 @@ float Thruster::getEffort() const {
 }
 
 float Thruster::getAdvanceSpeed(gz::sim::EntityComponentManager& ecm) const {
-    auto vel = Link(link).WorldLinearVelocity(ecm).value();
-    auto pose = Link(link).WorldPose(ecm).value();
-    auto forward_i = pose.Rot().RotateVector(Vector3d::UnitX);
-    return forward_i.Dot(vel);
+    auto vel = Link(link).WorldLinearVelocity(ecm);
+    auto pose = Link(link).WorldPose(ecm);
+    if (!vel.has_value() || !pose.has_value()) {
+        return 0;
+    }
+
+    auto forward_i = pose.value().Rot().RotateVector(Vector3d::UnitX);
+    return forward_i.Dot(vel.value());
 }
