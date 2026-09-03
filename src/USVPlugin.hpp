@@ -6,6 +6,7 @@
 #include <gz/transport.hh>
 
 #include <gazebo_usv/DirectForceApplication.hpp>
+#include <gazebo_usv/Buoyancy.hpp>
 #include <gazebo_usv/Rudder.hpp>
 #include <gazebo_usv/Thruster.hpp>
 #include <gazebo_usv/Thrusters.hpp>
@@ -44,17 +45,25 @@ namespace gazebo_usv {
         gz::sim::Entity m_model;
 
         std::vector<Rudder> m_rudders;
+        std::vector<Buoyancy> m_buoyancy;
         Thrusters* m_thrusters = nullptr;
         Wind* m_wind = nullptr;
         Wave* m_wave = nullptr;
         DirectForceApplication* m_direct_force = nullptr;
 
-        std::vector<Rudder> loadRudders(sdf::ElementConstPtr plugin_sdf, gz::sim::EntityComponentManager& ecm);
-        Thrusters* loadThrusters(sdf::ElementConstPtr plugin_sdf, gz::sim::EntityComponentManager& ecm);
-        Wind* loadWindParameters(sdf::ElementConstPtr plugin_sdf, gz::sim::EntityComponentManager& ecm);
-        Wave* loadWaveParameters(sdf::ElementConstPtr plugin_sdf, gz::sim::EntityComponentManager& ecm);
+        std::vector<Rudder> loadRudders(sdf::ElementConstPtr plugin_sdf,
+            gz::sim::EntityComponentManager& ecm);
+        std::vector<Buoyancy> loadBuoyancy(sdf::ElementConstPtr plugin_sdf,
+            gz::sim::EntityComponentManager& ecm);
+        Thrusters* loadThrusters(sdf::ElementConstPtr plugin_sdf,
+            gz::sim::EntityComponentManager& ecm);
+        Wind* loadWindParameters(sdf::ElementConstPtr plugin_sdf,
+            gz::sim::EntityComponentManager& ecm);
+        Wave* loadWaveParameters(sdf::ElementConstPtr plugin_sdf,
+            gz::sim::EntityComponentManager& ecm);
         DirectForceApplication* loadDirectForceApplicationParameters(
-            sdf::ElementConstPtr plugin_sdf, gz::sim::EntityComponentManager& ecm);
+            sdf::ElementConstPtr plugin_sdf,
+            gz::sim::EntityComponentManager& ecm);
     };
 }
 

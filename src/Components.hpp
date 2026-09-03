@@ -30,7 +30,13 @@ namespace gazebo_usv {
     using ThrustersTopic = gz::sim::components::Component<std::string,
         class ThrustersTopicTag,
         gz::sim::serializers::StringSerializer>;
-    GZ_SIM_REGISTER_COMPONENT("gazebo_usv_components.ThrustersTopic", ThrustersTopic)
+        GZ_SIM_REGISTER_COMPONENT("gazebo_usv_components.ThrustersTopic", ThrustersTopic)
+
+    /// \brief Water level used to compute buoyancy for a link.
+    using WaterLevel = gz::sim::components::Component<double,
+        class WaterLevelTag,
+        gz::sim::serializers::DefaultSerializer<double>>;
+    GZ_SIM_REGISTER_COMPONENT("gazebo_usv_components.WaterLevel", WaterLevel)
 }
 
 #endif

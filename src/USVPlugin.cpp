@@ -37,6 +37,11 @@ void USVPlugin::Configure(gz::sim::Entity const& entity,
         m_rudders = loadRudders(rudders_sdf, ecm);
     }
 
+    auto buoyancy_sdf = plugin_sdf->FindElement("buoyancy");
+    if (buoyancy_sdf) {
+        m_buoyancy = loadBuoyancy(buoyancy_sdf, ecm);
+    }
+
     auto wind_sdf = plugin_sdf->FindElement("wind_dynamics");
     if (wind_sdf) {
         m_wind = loadWindParameters(wind_sdf, ecm);
@@ -80,6 +85,21 @@ std::vector<Rudder> USVPlugin::loadRudders(sdf::ElementConstPtr plugin_sdf,
     }
 
     return rudders;
+}
+
+std::vector<Buoyancy> USVPlugin::loadBuoyancy(sdf::ElementConstPtr plugin_sdf,
+    gz::sim::EntityComponentManager& ecm)
+{
+    std::vector<Buoyancy> buoyancy;
+
+    double water_level = plugin_sdf->Get<double>("water_level", 0).first;
+    sdf::ElementConstPtr el = plugin_sdf->FindElement("link");
+    while (el) {
+        buoyancy.push_back(Buoyancy(*this, m_model, el, ecm, water_level));
+        el = el->GetNextElement("link");
+    }
+
+    return buoyancy;
 }
 
 Thrusters* USVPlugin::loadThrusters(sdf::ElementConstPtr plugin_sdf,
@@ -135,6 +155,10 @@ DirectForceApplication* USVPlugin::loadDirectForceApplicationParameters(
 void USVPlugin::PreUpdate(gz::sim::UpdateInfo const& info,
     gz::sim::EntityComponentManager& ecm)
 {
+    for (auto& b : m_buoyancy) {
+        b.update(ecm);
+    }
+
     for (auto& rudder : m_rudders) {
         rudder.update(ecm);
     }
