@@ -13,8 +13,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 find_package(gz-sim-physics-system REQUIRED)
 rock_library(gazebo_usv
-    SOURCES USVPlugin.cpp Thrusters.cpp Thruster.cpp Rudder.cpp Wind.cpp Wave.cpp DirectForceApplication.cpp
-    HEADERS USVPlugin.hpp Thrusters.hpp Thruster.hpp Rudder.hpp Wind.hpp Wave.hpp DirectForceApplication.hpp Components.hpp
+    SOURCES USVPlugin.cpp Thrusters.cpp Thruster.cpp Rudder.cpp Wind.cpp Wave.cpp DirectForceApplication.cpp Buoyancy.cpp
+    HEADERS USVPlugin.hpp Thrusters.hpp Thruster.hpp Rudder.hpp Wind.hpp Wave.hpp DirectForceApplication.hpp Buoyancy.hpp Components.hpp
     ${__boost_deps}
     DEPS_CMAKE gz-sim-physics-system
     DEPS_PKGCONFIG base-types sdformat protobuf)

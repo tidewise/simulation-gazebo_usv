@@ -1,10 +1,12 @@
 # Plugin to support vessel-related functionality in Gaezbo simulations
 
 The plugin is meant to be added to a `<model>`. Synopsis:
-```
-<plugin name="gazebo_usv::Actuators" filename="gazebo_usv">
+
+```xml
+<plugin name="gazebo_usv::USVPlugin" filename="gazebo_usv">
     <thrusters>...</thrusters>
     <rudders>...</rudders>
+    <buoyancy>...</buoyancy>
     <wave_dynamics>...</wave_dynamics>
     <wind_dynamics>...</wind_dynamics>
     <direct_force>...</direct_force>
@@ -20,7 +22,7 @@ links whose X axis is the thrust direction, and then link them with the plugin:
 <link name="thrust_defining_link">
 </link>
 
-<plugin name="gazebo_usv::Actuators" filename="gazebo_usv">
+<plugin name="gazebo_usv::USVPlugin" filename="gazebo_usv">
     <thrusters>
         <topic>thrusters</topic>
         <thruster name="thrust_defining_link">
@@ -51,7 +53,7 @@ also by one thruster associated with the rudder
 <link name="rudder_starboard">
 </link>
 
-<plugin name="gazebo_usv::Actuators" filename="gazebo_usv">
+<plugin name="gazebo_usv::USVPlugin" filename="gazebo_usv">
     <thrusters>
         <thruster name="thruster_starboard">
             <min_thrust>...</min_thrust>
@@ -79,3 +81,37 @@ also by one thruster associated with the rudder
     </rudders>
 </plugin>
 ```
+
+## Buoyancy
+
+The gazebo_usv's buoyancy implementation lets you specify the resulting force on a link.
+It does not depend on designing the links and collision shapes so that the buoyancy is
+calculated. The submerged-ratio-to-buoyancy mapping is a simple linear interpolation. To
+get better models (and e.g. implement support for waves), split the overall system into
+different links, specifying each link's buoyancy separately.
+
+The overall buoyancy syntax is:
+
+```xml
+<link name="body">
+</link>
+
+<plugin name="gazebo_usv::USVPlugin" filename="gazebo_usv">
+    <buoyancy>
+        <!-- Static level of water (see below) -->
+        <water_level>0</water_level>
+        <!-- can specify more than one link in a single `link` tag -->
+        <link name="body">
+            <!-- Buoyancy force when the whole link is submerged, in N -->
+            <buoyancy_force>0</buoyancy_force>
+            <!-- Position of the center buoyancy w.r.t. the center of gravity in the
+                 link-fixed frame -->
+            <center_of_buoyancy>0 0 0</center_of_buoyancy>
+        </link>
+    </buoyancy>
+</plugin>
+```
+
+**Water level**. By default, the water level is zero. It can be changed statically via the
+`water_level` tag. Other plugins may also specify the water level dynamically by setting
+the gazebo_usv::WaterLevel component on relevant links.
