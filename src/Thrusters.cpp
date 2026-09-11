@@ -27,14 +27,15 @@ void Thrusters::load(std::shared_ptr<gz::transport::Node> node,
     string topic_basename = gz::sim::topicFromScopedName(model, ecm) + "/" + "thrusters";
     string topic_name = topic_basename;
 
-    // Tag the model as having thrusters, and the corresponding topic
-    ecm.CreateComponent(m_model, ThrustersTopic(topic_basename));
-    node->Subscribe(topic_name, &Thrusters::processThrusterCommand, this);
 
     auto subtopic = plugin_sdf->Get<string>("topic", "").first;
     if (!subtopic.empty()) {
         topic_name += "/" + subtopic;
     }
+
+    // Tag the model as having thrusters, and the corresponding topic
+    ecm.CreateComponent(m_model, ThrustersTopic(topic_basename));
+    node->Subscribe(topic_name, &Thrusters::processThrusterCommand, this);
 
     gzmsg << "Thruster: receiving thruster commands from " << topic_name << endl;
 }
