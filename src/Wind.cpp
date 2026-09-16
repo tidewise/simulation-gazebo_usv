@@ -32,10 +32,11 @@ void Wind::load(gz::sim::Entity model,
     auto subtopic = plugin_sdf->Get<string>("topic", "wind").first;
     auto topic_name = gz::sim::topicFromScopedName(model, ecm) + "/" + subtopic;
 
-    ecm.CreateComponent(m_model, WindSpeedTopic(m_topic_name));
-    m_node->Subscribe(m_topic_name, &Wind::readWindVelocity, this);
     m_topic_name = topic_name;
     gzmsg << "Wind: receiving wind commands from " << topic_name << endl;
+
+    ecm.CreateComponent(m_model, WindSpeedTopic(m_topic_name));
+    m_node->Subscribe(m_topic_name, &Wind::readWindVelocity, this);
 
     m_parameters = loadParameters(plugin_sdf);
 }

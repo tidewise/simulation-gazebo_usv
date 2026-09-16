@@ -66,7 +66,7 @@ namespace rock_gazebo_helpers {
      * @param element_name the name of the element that contains the link name. If
      *    it not present, the function will return the first link of the model.
      */
-    gz::sim::Entity resolveLinkWithDefault(gz::sim::Entity model,
+    gz::sim::Entity resolveLinkWithDefault(gz::sim::Entity const& model,
         sdf::ElementConstPtr plugin_sdf,
         std::string const& element_name,
         gz::sim::EntityComponentManager& ecm);

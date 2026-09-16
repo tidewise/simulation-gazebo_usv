@@ -18,7 +18,7 @@ string rock_gazebo_helpers::computePluginTopicScope(gz::sim::Entity model,
 }
 
 gz::sim::Entity rock_gazebo_helpers::resolveLinkWithDefault(
-    gz::sim::Entity model,
+    gz::sim::Entity const& model,
     sdf::ElementConstPtr plugin_sdf,
     string const& element_name,
     gz::sim::EntityComponentManager& ecm
